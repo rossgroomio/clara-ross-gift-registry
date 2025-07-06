@@ -459,7 +459,6 @@
                         React.createElement('div', { className: "space-y-1" },
                           ...item.contributions.map((contrib, index) => {
                             const status = contrib.status || 'confirmed'; // Default to confirmed for old contributions
-                            const isPending = status === 'pending_payment';
                             
                             return React.createElement('div', { key: index, className: "flex justify-between items-center text-sm mb-1" },
                               React.createElement('div', { className: "flex-1" },
@@ -473,31 +472,7 @@
                                   }`
                                 }, status)
                               ),
-                              React.createElement('div', { className: "flex items-center space-x-2" },
-                                React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`),
-                                isPending && React.createElement('button', {
-                                  onClick: async () => {
-                                    if (confirm(`Mark this payment as confirmed?`)) {
-                                      try {
-                                        if (!contrib.id) {
-                                          alert('Error: Contribution ID missing. Cannot confirm payment.');
-                                          return;
-                                        }
-                                        
-                                        console.log('Confirming payment for:', { name: contrib.name, id: contrib.id });
-                                        await updatePaymentStatus(contrib.id, 'confirmed');
-                                        console.log('Payment confirmed successfully for', contrib.name);
-                                        alert(`Payment confirmed!`);
-                                        
-                                      } catch (error) {
-                                        console.error('Error confirming payment:', error);
-                                        alert(`Error confirming payment: ${error.message}`);
-                                      }
-                                    }
-                                  },
-                                  className: "text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-                                }, "✓ Confirm")
-                              )
+                              React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`)
                             );
                           })
                         )
