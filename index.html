@@ -174,8 +174,12 @@
 
           function getTotalContributed(item) {
             return item.contributions
-            .filter(contrib => contrib.status === 'paid' || contrib.status === 'confirmed')
-            .reduce((sum, contrib) => sum + contrib.amount, 0);
+              .filter(contrib => {
+                // If no status field exists, treat as confirmed (backward compatibility)
+                // Only exclude pending_payment status
+                return !contrib.status || contrib.status === 'paid' || contrib.status === 'confirmed';
+              })
+              .reduce((sum, contrib) => sum + contrib.amount, 0);
           }
 
           function getRemainingAmount(item) {
@@ -408,38 +412,49 @@
                       totalContributed > 0 && React.createElement('div', { className: "mb-4" },
                         React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
                         React.createElement('div', { className: "space-y-1" },
-                          ...item.contributions.map((contrib, index) => 
-                            React.createElement('div', { key: index, className: "flex justify-between items-center text-sm mb-1" },
+                          ...item.contributions.map((contrib, index) => {
+                            const status = contrib.status || 'confirmed'; // Default to confirmed for old contributions
+                            const isPending = status === 'pending_payment';
+                            
+                            return React.createElement('div', { key: index, className: "flex justify-between items-center text-sm mb-1" },
                               React.createElement('div', { className: "flex-1" },
                                 React.createElement('span', { className: "text-gray-700" }, contrib.name),
                                 React.createElement('span', { 
                                   className: `ml-2 px-2 py-1 rounded text-xs ${
-                                    contrib.status === 'confirmed' ? 'bg-green-100 text-green-800' :
-                                    contrib.status === 'paid' ? 'bg-blue-100 text-blue-800' :
-                                    'bg-yellow-100 text-yellow-800'
+                                    status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    status === 'paid' ? 'bg-blue-100 text-blue-800' :
+                                    status === 'pending_payment' ? 'bg-yellow-100 text-yellow-800' :
+                                    'bg-gray-100 text-gray-800'
                                   }`
-                                }, contrib.status || 'confirmed')
+                                }, status),
+                                React.createElement('span', { className: "ml-1 text-xs text-gray-500" }, 
+                                  `(ID: ${contrib.id ? contrib.id.substring(0,6) : 'none'})`
+                                )
                               ),
                               React.createElement('div', { className: "flex items-center space-x-2" },
                                 React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`),
-                                (contrib.status === 'pending_payment') && React.createElement('button', {
+                                isPending && React.createElement('button', {
                                   onClick: async () => {
                                     if (confirm(`Mark ${contrib.name}'s payment as confirmed?`)) {
                                       try {
+                                        if (!contrib.id) {
+                                          alert('Error: Contribution ID missing. Cannot confirm payment.');
+                                          return;
+                                        }
                                         const contributionRef = window.firebaseDB.ref(`contributions/${contrib.id}`);
                                         await contributionRef.update({ status: 'confirmed' });
                                         console.log('Payment confirmed for', contrib.name);
                                       } catch (error) {
                                         console.error('Error confirming payment:', error);
-                                        alert('Error confirming payment. Please try again.');
+                                        alert('Error confirming payment: ' + error.message);
                                       }
                                     }
                                   },
                                   className: "text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
                                 }, "✓ Confirm")
                               )
-                            )
-                          )
+                            );
+                          })
                         )
                       ),
 
@@ -555,6 +570,27 @@
                     className: "text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-100 rounded",
                     disabled: loading
                   }, loading ? "⏳" : "🔄 Refresh"),
+                  React.createElement('button', {
+                    onClick: () => {
+                      console.log('=== DEBUG: All contributions ===');
+                      items.forEach(item => {
+                        if (item.contributions.length > 0) {
+                          console.log(`Item: ${item.item}`);
+                          item.contributions.forEach(contrib => {
+                            console.log('  Contribution:', {
+                              id: contrib.id,
+                              name: contrib.name,
+                              amount: contrib.amount,
+                              status: contrib.status,
+                              hasStatus: contrib.hasOwnProperty('status'),
+                              allKeys: Object.keys(contrib)
+                            });
+                          });
+                        }
+                      });
+                    },
+                    className: "text-xs bg-purple-500 text-white px-2 py-1 rounded hover:bg-purple-600"
+                  }, "Debug Data"),
                   React.createElement('button', {
                     onClick: () => setShowAdminPanel(false),
                     className: "text-red-600 hover:text-red-800"
