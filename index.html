@@ -63,6 +63,18 @@
             { id: 11, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #5", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" }
           ];
 
+          // Add this function after the giftItems array
+          function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+          
+            return input
+              .trim()                                    // Remove whitespace
+              .replace(/[<>]/g, '')                     // Remove < and >
+              .replace(/javascript:/gi, '')             // Remove javascript: URLs
+              .replace(/on\w+=/gi, '')                  // Remove event handlers
+              .substring(0, 100);                       // Limit length
+          }
+
           // Initialize Firebase connection
           useEffect(() => {
             loadDataFromFirebase();
@@ -188,7 +200,7 @@
             if (!guestName || !contributionAmount || !selectedItem) return;
             
             // Sanitize inputs
-            const cleanName = sanitizeInput ? sanitizeInput(guestName) : guestName.trim();
+            const cleanName = sanitizeInput(guestName);
             const amount = parseFloat(contributionAmount);
               
             // Basic validation
