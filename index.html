@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clara & Ross's Wedding Registry</title>
+    <title>Clara & Ross's Gift Registry</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
@@ -383,7 +383,7 @@
                 React.createElement('div', {
                   className: "w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
                 }),
-                React.createElement('p', { className: "text-gray-600" }, "Loading wedding registry...")
+                React.createElement('p', { className: "text-gray-600" }, "Loading gift registry...")
               )
             );
           }
@@ -402,9 +402,9 @@
                   React.createElement('div', { className: "text-4xl" }, "❤️")
                 ),
                 React.createElement('h1', { className: "text-4xl font-bold text-gray-800 mb-2" }, "Clara & Ross's"),
-                React.createElement('h2', { className: "text-2xl text-rose-600 mb-4" }, "Wedding Gift Registry"),
+                React.createElement('h2', { className: "text-2xl text-rose-600 mb-4" }, "Gift Registry"),
                 React.createElement('p', { className: "text-gray-600 max-w-2xl mx-auto" }, 
-                  "Thank you for celebrating our special day with us! Your love and support mean the world to us. You can contribute any amount toward the gifts below or purchase items directly."
+                  "Thank you for coming to our event and celebrating our marriage and new arrival! Our event on 16th August at The Bat and Ball pub in Billingshurst is only small and we don't expect anything. But if you really do insist you can contribute any amount toward the gifts below."
                 ),
                 error && React.createElement('div', {
                   className: "mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md"
@@ -534,7 +534,7 @@
                           target: "_blank",
                           rel: "noopener noreferrer",
                           className: `${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium text-center block`
-                        }, `🔗 ${isFullyFunded ? 'View Item' : 'Buy Direct'}`)
+                        }, `🔗 ${isFullyFunded ? 'View Item' : 'URL'}`)
                       )
                     )
                   );
