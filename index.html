@@ -453,8 +453,8 @@
                         )
                       ),
 
-                      // Contributors section
-                      totalContributed > 0 && React.createElement('div', { className: "mb-4" },
+                      // Contributors section - show if there are ANY contributions (confirmed OR pending)
+                      item.contributions.length > 0 && React.createElement('div', { className: "mb-4" },
                         React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
                         React.createElement('div', { className: "space-y-1" },
                           ...item.contributions.map((contrib, index) => {
