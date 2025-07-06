@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Clara & Ross's Wedding Registry</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>❤️</text></svg>">
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,9 +34,8 @@
     
     <script>
         const { useState, useEffect } = React;
-        const { createElement: e } = React;
 
-        const WeddingGiftRegistry = () => {
+        function WeddingGiftRegistry() {
           const [items, setItems] = useState([]);
           const [filter, setFilter] = useState('all');
           const [guestName, setGuestName] = useState('');
@@ -77,7 +77,7 @@
             }
           }, []);
 
-          const loadDataFromFirebase = async () => {
+          async function loadDataFromFirebase() {
             setLoading(true);
             setError(null);
 
@@ -122,9 +122,9 @@
             } finally {
               setLoading(false);
             }
-          };
+          }
 
-          const saveContributionToFirebase = async (itemId, name, amount) => {
+          async function saveContributionToFirebase(itemId, name, amount) {
             try {
               if (!window.firebaseDB) {
                 throw new Error('Firebase not configured');
@@ -145,31 +145,31 @@
               console.error('Error saving to Firebase:', err);
               throw err;
             }
-          };
+          }
 
           useEffect(() => {
             // Add keyboard shortcut to toggle admin panel (Ctrl+Shift+A)
-            const handleKeyPress = (e) => {
+            function handleKeyPress(e) {
               if (e.ctrlKey && e.shiftKey && e.key === 'A') {
                 setShowAdminPanel(!showAdminPanel);
               }
-            };
+            }
             
             window.addEventListener('keydown', handleKeyPress);
             return () => window.removeEventListener('keydown', handleKeyPress);
           }, [showAdminPanel]);
 
-          const getTotalContributed = (item) => {
+          function getTotalContributed(item) {
             return item.contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
-          };
+          }
 
-          const getRemainingAmount = (item) => {
+          function getRemainingAmount(item) {
             return Math.max(0, item.price - getTotalContributed(item));
-          };
+          }
 
-          const getProgressPercentage = (item) => {
+          function getProgressPercentage(item) {
             return Math.min(100, (getTotalContributed(item) / item.price) * 100);
-          };
+          }
 
           const filteredItems = items.filter(item => {
             if (filter === 'available') return !item.purchased && getRemainingAmount(item) > 0;
@@ -177,7 +177,7 @@
             return true;
           });
 
-          const handleContribution = async () => {
+          async function handleContribution() {
             if (!guestName || !contributionAmount || !selectedItem) return;
 
             const amount = parseFloat(contributionAmount);
@@ -202,74 +202,71 @@
             } finally {
               setSaving(false);
             }
-          };
+          }
 
-          const openContributionModal = (item) => {
+          function openContributionModal(item) {
             setSelectedItem(item);
             setShowContributionModal(true);
-          };
+          }
 
           if (loading) {
-            return e('div', {
-              className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center"
+            return React.createElement('div', {
+              className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center",
+              style: { fontFamily: 'system-ui, sans-serif' }
             }, 
-              e('div', { className: "text-center" }, [
-                e('div', {
-                  key: "loader",
+              React.createElement('div', { className: "text-center" },
+                React.createElement('div', {
                   className: "w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
                 }),
-                e('p', { key: "text", className: "text-gray-600" }, "Loading wedding registry...")
-              ])
+                React.createElement('p', { className: "text-gray-600" }, "Loading wedding registry...")
+              )
             );
           }
 
-          return e('div', {
-            className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4"
+          // Create the main content
+          const mainContent = React.createElement('div', {
+            className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4",
+            style: { fontFamily: 'system-ui, sans-serif' }
           }, 
-            e('div', { className: "max-w-6xl mx-auto" }, [
+            React.createElement('div', { className: "max-w-6xl mx-auto" },
               // Header
-              e('div', {
-                key: "header",
+              React.createElement('div', {
                 className: "text-center mb-8 bg-white rounded-lg shadow-lg p-8"
-              }, [
-                e('div', { key: "heart", className: "flex justify-center mb-4" }, 
-                  e('div', { className: "text-4xl" }, "❤️")
+              },
+                React.createElement('div', { className: "flex justify-center mb-4" }, 
+                  React.createElement('div', { className: "text-4xl" }, "❤️")
                 ),
-                e('h1', { key: "title", className: "text-4xl font-bold text-gray-800 mb-2" }, "Clara & Ross's"),
-                e('h2', { key: "subtitle", className: "text-2xl text-rose-600 mb-4" }, "Wedding Gift Registry"),
-                e('p', { key: "description", className: "text-gray-600 max-w-2xl mx-auto" }, 
+                React.createElement('h1', { className: "text-4xl font-bold text-gray-800 mb-2" }, "Clara & Ross's"),
+                React.createElement('h2', { className: "text-2xl text-rose-600 mb-4" }, "Wedding Gift Registry"),
+                React.createElement('p', { className: "text-gray-600 max-w-2xl mx-auto" }, 
                   "Thank you for celebrating our special day with us! Your love and support mean the world to us. You can contribute any amount toward the gifts below or purchase items directly."
                 ),
-                error && e('div', {
-                  key: "error",
+                error && React.createElement('div', {
                   className: "mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md"
-                }, [
-                  e('p', { key: "error-text", className: "text-yellow-800 text-sm" }, error),
-                  e('button', {
-                    key: "refresh-btn",
+                },
+                  React.createElement('p', { className: "text-yellow-800 text-sm" }, error),
+                  React.createElement('button', {
                     onClick: loadDataFromFirebase,
                     className: "mt-2 text-yellow-800 underline text-sm hover:no-underline"
                   }, "Try refreshing")
-                ])
-              ]),
+                )
+              ),
 
               // Connection Status
-              e('div', { key: "status", className: "text-center mb-4" },
-                e('div', { className: "inline-flex items-center space-x-2 text-sm" }, [
-                  e('div', {
-                    key: "indicator",
+              React.createElement('div', { className: "text-center mb-4" },
+                React.createElement('div', { className: "inline-flex items-center space-x-2 text-sm" },
+                  React.createElement('div', {
                     className: `w-2 h-2 rounded-full ${window.firebaseDB ? 'bg-green-500' : 'bg-yellow-500'}`
                   }),
-                  e('span', { key: "text", className: "text-gray-600" }, 
+                  React.createElement('span', { className: "text-gray-600" }, 
                     window.firebaseDB ? 'Connected to Firebase' : 'Demo mode - Firebase not configured'
                   )
-                ])
+                )
               ),
 
               // Filter Buttons
-              e('div', { key: "filters", className: "flex justify-center mb-6 space-x-4" }, [
-                e('button', {
-                  key: "all",
+              React.createElement('div', { className: "flex justify-center mb-6 space-x-4" },
+                React.createElement('button', {
                   onClick: () => setFilter('all'),
                   className: `px-6 py-2 rounded-full font-medium transition-colors ${
                     filter === 'all' 
@@ -277,8 +274,7 @@
                       : 'bg-white text-gray-600 hover:bg-rose-100'
                   }`
                 }, `All Items (${items.length})`),
-                e('button', {
-                  key: "available",
+                React.createElement('button', {
                   onClick: () => setFilter('available'),
                   className: `px-6 py-2 rounded-full font-medium transition-colors ${
                     filter === 'available' 
@@ -286,8 +282,7 @@
                       : 'bg-white text-gray-600 hover:bg-rose-100'
                   }`
                 }, `Available (${items.filter(item => !item.purchased && getRemainingAmount(item) > 0).length})`),
-                e('button', {
-                  key: "purchased",
+                React.createElement('button', {
                   onClick: () => setFilter('purchased'),
                   className: `px-6 py-2 rounded-full font-medium transition-colors ${
                     filter === 'purchased' 
@@ -295,102 +290,114 @@
                       : 'bg-white text-gray-600 hover:bg-rose-100'
                   }`
                 }, `Fulfilled (${items.filter(item => item.purchased || getRemainingAmount(item) === 0).length})`)
-              ]),
+              ),
 
               // Gift Items Grid
-              e('div', { key: "grid", className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" },
-                filteredItems.map((item) => {
+              React.createElement('div', { className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" },
+                ...filteredItems.map((item) => {
                   const totalContributed = getTotalContributed(item);
                   const remaining = getRemainingAmount(item);
                   const progress = getProgressPercentage(item);
                   const isFullyFunded = remaining === 0 || item.purchased;
 
-                  return e('div', {
+                  return React.createElement('div', {
                     key: item.id,
                     className: "bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
                   },
-                    e('div', { className: "p-6" }, [
+                    React.createElement('div', { className: "p-6" },
                       // Item header
-                      e('div', { key: "header", className: "flex justify-between items-start mb-3" }, [
-                        e('h3', { key: "title", className: "text-lg font-semibold text-gray-800 leading-tight" }, item.item),
-                        isFullyFunded && e('span', { key: "check", className: "text-green-500 text-xl" }, "✓")
-                      ]),
+                      React.createElement('div', { className: "flex justify-between items-start mb-3" },
+                        React.createElement('h3', { className: "text-lg font-semibold text-gray-800 leading-tight" }, item.item),
+                        isFullyFunded && React.createElement('span', { className: "text-green-500 text-xl" }, "✓")
+                      ),
                       
-                      // Progress bar
-                      e('div', { key: "progress", className: "mb-4" }, [
-                        e('div', { key: "progress-text", className: "flex justify-between text-sm text-gray-600 mb-1" }, [
-                          e('span', { key: "goal" }, `Goal: £${item.price.toFixed(2)}`),
-                          e('span', { key: "percent" }, `${progress.toFixed(0)}% funded`)
-                        ]),
-                        e('div', { key: "progress-bar", className: "w-full bg-gray-200 rounded-full h-2" },
-                          e('div', {
+                      // Progress section
+                      React.createElement('div', { className: "mb-4" },
+                        React.createElement('div', { className: "flex justify-between text-sm text-gray-600 mb-1" },
+                          React.createElement('span', {}, `Goal: £${item.price.toFixed(2)}`),
+                          React.createElement('span', {}, `${progress.toFixed(0)}% funded`)
+                        ),
+                        React.createElement('div', { className: "w-full bg-gray-200 rounded-full h-2" },
+                          React.createElement('div', {
                             className: `h-2 rounded-full transition-all duration-300 ${
                               isFullyFunded ? 'bg-green-500' : 'bg-rose-500'
                             }`,
                             style: { width: `${progress}%` }
                           })
                         )
-                      ]),
+                      ),
 
-                      // Contributors
-                      totalContributed > 0 && e('div', { key: "contributors", className: "mb-4" }, [
-                        e('p', { key: "contributors-title", className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
-                        e('div', { key: "contributors-list", className: "space-y-1" },
-                          item.contributions.map((contrib, index) => 
-                            e('div', { key: index, className: "flex justify-between text-sm" }, [
-                              e('span', { key: "name", className: "text-gray-700" }, `Anonymous Guest ${index + 1}`),
-                              e('span', { key: "amount", className: "text-rose-600 font-medium" }, `£${contrib.amount.toFixed(2)}`)
-                            ])
+                      // Contributors section
+                      totalContributed > 0 && React.createElement('div', { className: "mb-4" },
+                        React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
+                        React.createElement('div', { className: "space-y-1" },
+                          ...item.contributions.map((contrib, index) => 
+                            React.createElement('div', { key: index, className: "flex justify-between text-sm" },
+                              React.createElement('span', { className: "text-gray-700" }, `Anonymous Guest ${index + 1}`),
+                              React.createElement('span', { className: "text-rose-600 font-medium" }, `£${contrib.amount.toFixed(2)}`)
+                            )
                           )
                         )
-                      ]),
+                      ),
 
-                      // Summary
-                      e('div', { key: "summary", className: "flex justify-between items-center text-sm text-gray-600 mb-4" }, [
-                        e('span', { key: "contributed" }, `Contributed: £${totalContributed.toFixed(2)}`),
-                        e('span', { key: "remaining" }, `Remaining: £${remaining.toFixed(2)}`)
-                      ]),
+                      // Summary section
+                      React.createElement('div', { className: "flex justify-between items-center text-sm text-gray-600 mb-4" },
+                        React.createElement('span', {}, `Contributed: £${totalContributed.toFixed(2)}`),
+                        React.createElement('span', {}, `Remaining: £${remaining.toFixed(2)}`)
+                      ),
 
-                      // Action buttons
-                      e('div', { key: "actions", className: "flex space-x-2" }, [
-                        !isFullyFunded && e('button', {
-                          key: "contribute",
+                      // Action buttons section
+                      React.createElement('div', { className: "flex space-x-2" },
+                        !isFullyFunded && React.createElement('button', {
                           onClick: () => openContributionModal(item),
                           className: "flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors font-medium"
                         }, "🎁 Contribute"),
-                        e('a', {
-                          key: "buy",
+                        React.createElement('a', {
                           href: item.url,
                           target: "_blank",
                           rel: "noopener noreferrer",
-                          className: `${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium text-center`
+                          className: `${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium text-center block`
                         }, `🔗 ${isFullyFunded ? 'View Item' : 'Buy Direct'}`)
-                      ])
-                    ])
+                      )
+                    )
                   );
                 })
               ),
 
-              // Contribution Modal
-              showContributionModal && selectedItem && e('div', {
+              // Footer
+              React.createElement('div', { className: "text-center mt-12 p-6 bg-white rounded-lg shadow-lg" },
+                React.createElement('p', { className: "text-gray-600 mb-2" }, 
+                  "Your generosity means everything to us! If you have any questions, please don't hesitate to reach out."
+                ),
+                React.createElement('p', { className: "text-rose-600 font-medium" }, "With love, Clara & Ross ❤️")
+              )
+            )
+          );
+
+          // Add modal and admin panel if needed
+          const elements = [mainContent];
+
+          // Contribution Modal
+          if (showContributionModal && selectedItem) {
+            elements.push(
+              React.createElement('div', {
                 key: "modal",
                 className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
               },
-                e('div', { className: "bg-white rounded-lg p-6 w-full max-w-md" }, [
-                  e('h3', { key: "modal-title", className: "text-xl font-semibold mb-4" }, `Contribute to: ${selectedItem.item}`),
+                React.createElement('div', { className: "bg-white rounded-lg p-6 w-full max-w-md" },
+                  React.createElement('h3', { className: "text-xl font-semibold mb-4" }, `Contribute to: ${selectedItem.item}`),
                   
-                  e('div', { key: "modal-remaining", className: "mb-4" },
-                    e('p', { className: "text-sm text-gray-600 mb-2" }, `Remaining amount needed: £${getRemainingAmount(selectedItem).toFixed(2)}`)
+                  React.createElement('div', { className: "mb-4" },
+                    React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, `Remaining amount needed: £${getRemainingAmount(selectedItem).toFixed(2)}`)
                   ),
 
-                  error && e('div', { key: "modal-error", className: "mb-4 p-3 bg-red-100 border border-red-300 rounded-md" },
-                    e('p', { className: "text-red-800 text-sm" }, error)
+                  error && React.createElement('div', { className: "mb-4 p-3 bg-red-100 border border-red-300 rounded-md" },
+                    React.createElement('p', { className: "text-red-800 text-sm" }, error)
                   ),
 
-                  e('div', { key: "modal-name", className: "mb-4" }, [
-                    e('label', { key: "name-label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Your Name"),
-                    e('input', {
-                      key: "name-input",
+                  React.createElement('div', { className: "mb-4" },
+                    React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-2" }, "Your Name"),
+                    React.createElement('input', {
                       type: "text",
                       value: guestName,
                       onChange: (e) => setGuestName(e.target.value),
@@ -398,12 +405,11 @@
                       placeholder: "Enter your name",
                       disabled: saving
                     })
-                  ]),
+                  ),
 
-                  e('div', { key: "modal-amount", className: "mb-6" }, [
-                    e('label', { key: "amount-label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Contribution Amount"),
-                    e('input', {
-                      key: "amount-input",
+                  React.createElement('div', { className: "mb-6" },
+                    React.createElement('label', { className: "block text-sm font-medium text-gray-700 mb-2" }, "Contribution Amount"),
+                    React.createElement('input', {
                       type: "number",
                       value: contributionAmount,
                       onChange: (e) => setContributionAmount(e.target.value),
@@ -414,92 +420,99 @@
                       step: "0.01",
                       disabled: saving
                     })
-                  ]),
+                  ),
 
-                  e('div', { key: "modal-buttons", className: "flex space-x-3" }, [
-                    e('button', {
-                      key: "cancel",
+                  React.createElement('div', { className: "flex space-x-3" },
+                    React.createElement('button', {
                       onClick: () => setShowContributionModal(false),
                       className: "flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors",
                       disabled: saving
                     }, "Cancel"),
-                    e('button', {
-                      key: "contribute",
+                    React.createElement('button', {
                       onClick: handleContribution,
                       disabled: !guestName || !contributionAmount || parseFloat(contributionAmount) <= 0 || saving,
                       className: "flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
                     }, saving ? "⏳ Saving..." : "Contribute")
-                  ])
-                ])
-              ),
+                  )
+                )
+              )
+            );
+          }
 
-              // Admin Panel
-              showAdminPanel && e('div', {
+          // Admin Panel
+          if (showAdminPanel) {
+            const adminContent = [];
+            
+            adminContent.push(
+              React.createElement('div', { key: "admin-header", className: "flex justify-between items-center mb-4" },
+                React.createElement('h3', { className: "text-xl font-semibold text-red-800" }, "🔒 Admin: Contributor Details"),
+                React.createElement('div', { className: "flex space-x-2" },
+                  React.createElement('button', {
+                    onClick: loadDataFromFirebase,
+                    className: "text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-100 rounded",
+                    disabled: loading
+                  }, loading ? "⏳" : "🔄 Refresh"),
+                  React.createElement('button', {
+                    onClick: () => setShowAdminPanel(false),
+                    className: "text-red-600 hover:text-red-800"
+                  }, "✕ Close")
+                )
+              )
+            );
+
+            adminContent.push(
+              React.createElement('div', { key: "admin-info", className: "text-sm text-red-600 mb-4" }, 
+                `Press Ctrl+Shift+A to toggle this panel | Firebase: ${window.firebaseDB ? '✅ Connected' : '❌ Not configured'}`
+              )
+            );
+
+            const itemsWithContributions = items.filter(item => item.contributions.length > 0);
+            if (itemsWithContributions.length === 0) {
+              adminContent.push(
+                React.createElement('p', { key: "no-contributions", className: "text-gray-600 italic" }, "No contributions yet")
+              );
+            } else {
+              itemsWithContributions.forEach(item => {
+                adminContent.push(
+                  React.createElement('div', { key: `item-${item.id}`, className: "mb-4 p-4 bg-white border rounded" },
+                    React.createElement('h4', { className: "font-medium text-gray-800 mb-2" }, item.item),
+                    React.createElement('div', { className: "space-y-1" },
+                      ...item.contributions.map((contrib, index) => 
+                        React.createElement('div', { key: index, className: "flex justify-between text-sm" },
+                          React.createElement('span', { className: "text-gray-700" }, contrib.name),
+                          React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`)
+                        )
+                      )
+                    ),
+                    React.createElement('div', { className: "mt-2 pt-2 border-t text-sm font-medium" }, 
+                      `Total for this item: £${getTotalContributed(item).toFixed(2)}`
+                    )
+                  )
+                );
+              });
+
+              adminContent.push(
+                React.createElement('div', { key: "summary", className: "mt-6 p-4 bg-green-50 border border-green-200 rounded" },
+                  React.createElement('h4', { className: "font-medium text-green-800 mb-2" }, "Summary"),
+                  React.createElement('div', { className: "text-sm" },
+                    React.createElement('p', {}, `Total contributions: £${items.reduce((total, item) => total + getTotalContributed(item), 0).toFixed(2)}`),
+                    React.createElement('p', {}, `Number of contributors: ${items.reduce((total, item) => total + item.contributions.length, 0)}`),
+                    React.createElement('p', {}, `Items with contributions: ${items.filter(item => item.contributions.length > 0).length}`)
+                  )
+                )
+              );
+            }
+
+            elements.push(
+              React.createElement('div', {
                 key: "admin",
                 className: "bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-8"
-              }, [
-                e('div', { key: "admin-header", className: "flex justify-between items-center mb-4" }, [
-                  e('h3', { key: "title", className: "text-xl font-semibold text-red-800" }, "🔒 Admin: Contributor Details"),
-                  e('div', { key: "admin-controls", className: "flex space-x-2" }, [
-                    e('button', {
-                      key: "refresh",
-                      onClick: loadDataFromFirebase,
-                      className: "text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-100 rounded",
-                      disabled: loading
-                    }, loading ? "⏳" : "🔄 Refresh"),
-                    e('button', {
-                      key: "close",
-                      onClick: () => setShowAdminPanel(false),
-                      className: "text-red-600 hover:text-red-800"
-                    }, "✕ Close")
-                  ])
-                ]),
-                e('div', { key: "admin-info", className: "text-sm text-red-600 mb-4" }, 
-                  `Press Ctrl+Shift+A to toggle this panel | Firebase: ${window.firebaseDB ? '✅ Connected' : '❌ Not configured'}`
-                ),
-                items.filter(item => item.contributions.length > 0).length === 0 ? 
-                  e('p', { key: "no-contributions", className: "text-gray-600 italic" }, "No contributions yet") :
-                  [
-                    ...items.filter(item => item.contributions.length > 0).map(item => 
-                      e('div', { key: item.id, className: "mb-4 p-4 bg-white border rounded" }, [
-                        e('h4', { key: "item-title", className: "font-medium text-gray-800 mb-2" }, item.item),
-                        e('div', { key: "contributors", className: "space-y-1" },
-                          item.contributions.map((contrib, index) => 
-                            e('div', { key: index, className: "flex justify-between text-sm" }, [
-                              e('span', { key: "name", className: "text-gray-700" }, contrib.name),
-                              e('span', { key: "amount", className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`)
-                            ])
-                          )
-                        ),
-                        e('div', { key: "total", className: "mt-2 pt-2 border-t text-sm font-medium" }, 
-                          `Total for this item: £${getTotalContributed(item).toFixed(2)}`
-                        )
-                      ])
-                    ),
-                    items.filter(item => item.contributions.length > 0).length > 0 && e('div', {
-                      key: "summary",
-                      className: "mt-6 p-4 bg-green-50 border border-green-200 rounded"
-                    }, [
-                      e('h4', { key: "summary-title", className: "font-medium text-green-800 mb-2" }, "Summary"),
-                      e('div', { key: "summary-stats", className: "text-sm" }, [
-                        e('p', { key: "total-contrib" }, `Total contributions: £${items.reduce((total, item) => total + getTotalContributed(item), 0).toFixed(2)}`),
-                        e('p', { key: "num-contrib" }, `Number of contributors: ${items.reduce((total, item) => total + item.contributions.length, 0)}`),
-                        e('p', { key: "items-contrib" }, `Items with contributions: ${items.filter(item => item.contributions.length > 0).length}`)
-                      ])
-                    ])
-                  ]
-              ),
+              }, ...adminContent)
+            );
+          }
 
-              // Footer
-              e('div', { key: "footer", className: "text-center mt-12 p-6 bg-white rounded-lg shadow-lg" }, [
-                e('p', { key: "message", className: "text-gray-600 mb-2" }, 
-                  "Your generosity means everything to us! If you have any questions, please don't hesitate to reach out."
-                ),
-                e('p', { key: "signature", className: "text-rose-600 font-medium" }, "With love, Clara & Ross ❤️")
-              ])
-            ])
-          );
-        };
+          return React.createElement(React.Fragment, {}, ...elements);
+        }
 
         ReactDOM.render(React.createElement(WeddingGiftRegistry), document.getElementById('root'));
     </script>
