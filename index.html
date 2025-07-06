@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clara & Ross's Wedding Registry</title>
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script>
+        // Replace with your Firebase config
+        const firebaseConfig = {
+          apiKey: "AIzaSyCSkzRczHX9dLjd7ZPk31NfuaQeD7sy_kk",
+          authDomain: "clara-ross-gift-registry.firebaseapp.com",
+          projectId: "clara-ross-gift-registry",
+          storageBucket: "clara-ross-gift-registry.firebasestorage.app",
+          messagingSenderId: "75526395782",
+          appId: "1:75526395782:web:63cea957ced9f951effe07"
+        };
+        
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        window.firebaseDB = firebase.database();
+    </script>
+    
+    <script type="text/babel">
+       const { useState, useEffect } = React;
+       const { Heart, ExternalLink, Check, Users, Gift, Loader2 } = lucide;
+
+       const WeddingGiftRegistry = () => {
+         const [items, setItems] = useState([]);
+         const [filter, setFilter] = useState('all');
+         const [guestName, setGuestName] = useState('');
+         const [showContributionModal, setShowContributionModal] = useState(false);
+         const [selectedItem, setSelectedItem] = useState(null);
+         const [contributionAmount, setContributionAmount] = useState('');
+         const [showAdminPanel, setShowAdminPanel] = useState(false);
+         const [loading, setLoading] = useState(true);
+         const [saving, setSaving] = useState(false);
+         const [error, setError] = useState(null);
+
+         // Clara & Ross's Wedding Gift List
+         const giftItems = [
+           { id: 1, item: "Outdoor cushion storage box", price: 249.99, url: "https://www.tatesofsussex.co.uk/shop/products/outdoor-living/garden-storage/storage-boxes/storage-box-570-litre.html" },
+           { id: 2, item: "Pendant light", price: 250.00, url: "https://www.nkuku.com/products/chakai-wood-metal-pendant-large-cp05" },
+           { id: 3, item: "Bedside lamp #1", price: 40.00, url: "https://www.johnlewis.com/john-lewis-isabel-mini-touch-table-lamp/antique-brass/p6092035" },
+           { id: 4, item: "Bedside lamp #2", price: 40.00, url: "https://www.johnlewis.com/john-lewis-isabel-mini-touch-table-lamp/antique-brass/p6092035" },
+           { id: 5, item: "Living room side table [50cm]", price: 150.00, url: "https://theindustrialfurniture.co.uk/products/mushroom-wooden-round-coffee-table-wood-end-table-side-table-solid-wood-coffee-table-40cm-50cm-60cm?srsltid=AfmBOoqfsLsXgEgcKFa-wa9iXCFdCxfPHwct0dxVv3h9rvJyvdckLa_X&variant=43090121130172" },
+           { id: 6, item: "Rug (152 x 244cm)", price: 498.00, url: "https://www.anthropologie.com/en-gb/shop/hybrid/matilda-goad-co-tufted-plaid-rug?color=048&size=152cm+x+244cm&type=REGULAR&inventoryCountry=GB&countryCode=GB&currency=GBP&epik=dj0yJnU9Q1JMSUNYUXpDcjh2NW9aTTFfU19MUW9oZVRwWW51dVQmcD0wJm49OXAwZm55Nnc0NmdkdVJ2d3ZkWHFTZyZ0PUFBQUFBR2hxS2tV&quantity=1" },
+           { id: 7, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #1", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" },
+           { id: 8, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #2", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" },
+           { id: 9, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #3", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" },
+           { id: 10, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #4", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" },
+           { id: 11, item: "Window seat cushion - Honey Pot Clever Velvet (30x60cm) #5", price: 69.00, url: "https://loaf.com/products/scatter-cushions?colour=honey-pot-clever-velvet&size=30-x-60-cm" }
+         ];
+
+         // Initialize Firebase connection
+         useEffect(() => {
+           loadDataFromFirebase();
+           
+           // Set up real-time listener
+           const contributionsRef = window.firebaseDB.ref('contributions');
+           const listener = contributionsRef.on('value', (snapshot) => {
+             loadDataFromFirebase();
+           });
+           
+           return () => contributionsRef.off('value', listener);
+         }, []);
+
+         const loadDataFromFirebase = async () => {
+           setLoading(true);
+           setError(null);
+
+           try {
+             const contributionsRef = window.firebaseDB.ref('contributions');
+             const snapshot = await contributionsRef.once('value');
+             const contributionsData = snapshot.val() || {};
+             
+             // Convert Firebase object to array
+             const contributions = Object.keys(contributionsData).map(key => ({
+               id: key,
+               ...contributionsData[key]
+             }));
+
+             // Merge contributions with items
+             const itemsWithContributions = giftItems.map(item => {
+               const itemContributions = contributions.filter(contrib => contrib.itemId === item.id);
+               const totalContributed = itemContributions.reduce((sum, contrib) => sum + contrib.amount, 0);
+               return {
+                 ...item,
+                 contributions: itemContributions,
+                 purchased: totalContributed >= item.price
+               };
+             });
+
+             setItems(itemsWithContributions);
+           } catch (err) {
+             console.error('Error loading from Firebase:', err);
+             setError('Failed to load registry data');
+             
+             // Fallback to local data
+             const itemsWithContributions = giftItems.map(item => ({
+               ...item,
+               contributions: [],
+               purchased: false
+             }));
+             setItems(itemsWithContributions);
+           } finally {
+             setLoading(false);
+           }
+         };
+
+         const saveContributionToFirebase = async (itemId, name, amount) => {
+           try {
+             const contribution = {
+               itemId,
+               name,
+               amount,
+               timestamp: new Date().toISOString()
+             };
+
+             const contributionsRef = window.firebaseDB.ref('contributions');
+             await contributionsRef.push(contribution);
+             
+             console.log('Contribution saved to Firebase:', contribution);
+           } catch (err) {
+             console.error('Error saving to Firebase:', err);
+             throw err;
+           }
+         };
+
+         useEffect(() => {
+           // Add keyboard shortcut to toggle admin panel (Ctrl+Shift+A)
+           const handleKeyPress = (e) => {
+             if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+               setShowAdminPanel(!showAdminPanel);
+             }
+           };
+           
+           window.addEventListener('keydown', handleKeyPress);
+           return () => window.removeEventListener('keydown', handleKeyPress);
+         }, [showAdminPanel]);
+
+         const getTotalContributed = (item) => {
+           return item.contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
+         };
+
+         const getRemainingAmount = (item) => {
+           return Math.max(0, item.price - getTotalContributed(item));
+         };
+
+         const getProgressPercentage = (item) => {
+           return Math.min(100, (getTotalContributed(item) / item.price) * 100);
+         };
+
+         const filteredItems = items.filter(item => {
+           if (filter === 'available') return !item.purchased && getRemainingAmount(item) > 0;
+           if (filter === 'purchased') return item.purchased || getRemainingAmount(item) === 0;
+           return true;
+         });
+
+         const handleContribution = async () => {
+           if (!guestName || !contributionAmount || !selectedItem) return;
+
+           const amount = parseFloat(contributionAmount);
+           const remaining = getRemainingAmount(selectedItem);
+           const actualAmount = Math.min(amount, remaining);
+
+           setSaving(true);
+           setError(null);
+
+           try {
+             await saveContributionToFirebase(selectedItem.id, guestName, actualAmount);
+             
+             setShowContributionModal(false);
+             setGuestName('');
+             setContributionAmount('');
+             setSelectedItem(null);
+             
+             // Data will auto-refresh via the real-time listener
+           } catch (err) {
+             setError('Failed to save contribution. Please try again.');
+             console.error('Contribution error:', err);
+           } finally {
+             setSaving(false);
+           }
+         };
+
+         const openContributionModal = (item) => {
+           setSelectedItem(item);
+           setShowContributionModal(true);
+         };
+
+         if (loading) {
+           return React.createElement('div', {
+             className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center"
+           }, React.createElement('div', {
+             className: "text-center"
+           }, [
+             React.createElement(Loader2, {
+               key: "loader",
+               className: "w-8 h-8 animate-spin text-rose-500 mx-auto mb-4"
+             }),
+             React.createElement('p', {
+               key: "text",
+               className: "text-gray-600"
+             }, "Loading wedding registry...")
+           ]));
+         }
+
+         return React.createElement('div', {
+           className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4"
+         }, React.createElement('div', {
+           className: "max-w-6xl mx-auto"
+         }, [
+           // Header
+           React.createElement('div', {
+             key: "header",
+             className: "text-center mb-8 bg-white rounded-lg shadow-lg p-8"
+           }, [
+             React.createElement('div', {
+               key: "heart",
+               className: "flex justify-center mb-4"
+             }, React.createElement(Heart, {
+               className: "w-12 h-12 text-rose-500"
+             })),
+             React.createElement('h1', {
+               key: "title",
+               className: "text-4xl font-bold text-gray-800 mb-2"
+             }, "Clara & Ross's"),
+             React.createElement('h2', {
+               key: "subtitle", 
+               className: "text-2xl text-rose-600 mb-4"
+             }, "Wedding Gift Registry"),
+             React.createElement('p', {
+               key: "description",
+               className: "text-gray-600 max-w-2xl mx-auto"
+             }, "Thank you for celebrating our special day with us! Your love and support mean the world to us. You can contribute any amount toward the gifts below or purchase items directly."),
+             error && React.createElement('div', {
+               key: "error",
+               className: "mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md"
+             }, [
+               React.createElement('p', {
+                 key: "error-text",
+                 className: "text-yellow-800 text-sm"
+               }, error),
+               React.createElement('button', {
+                 key: "refresh-btn",
+                 onClick: loadDataFromFirebase,
+                 className: "mt-2 text-yellow-800 underline text-sm hover:no-underline"
+               }, "Try refreshing")
+             ])
+           ]),
+
+           // Connection Status
+           React.createElement('div', {
+             key: "status",
+             className: "text-center mb-4"
+           }, React.createElement('div', {
+             className: "inline-flex items-center space-x-2 text-sm"
+           }, [
+             React.createElement('div', {
+               key: "indicator",
+               className: "w-2 h-2 rounded-full bg-green-500"
+             }),
+             React.createElement('span', {
+               key: "text",
+               className: "text-gray-600"
+             }, "Connected to Firebase")
+           ])),
+
+           // Filter Buttons
+           React.createElement('div', {
+             key: "filters",
+             className: "flex justify-center mb-6 space-x-4"
+           }, [
+             React.createElement('button', {
+               key: "all",
+               onClick: () => setFilter('all'),
+               className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                 filter === 'all' 
+                   ? 'bg-rose-500 text-white' 
+                   : 'bg-white text-gray-600 hover:bg-rose-100'
+               }`
+             }, `All Items (${items.length})`),
+             React.createElement('button', {
+               key: "available",
+               onClick: () => setFilter('available'),
+               className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                 filter === 'available' 
+                   ? 'bg-rose-500 text-white' 
+                   : 'bg-white text-gray-600 hover:bg-rose-100'
+               }`
+             }, `Available (${items.filter(item => !item.purchased && getRemainingAmount(item) > 0).length})`),
+             React.createElement('button', {
+               key: "purchased",
+               onClick: () => setFilter('purchased'),
+               className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                 filter === 'purchased' 
+                   ? 'bg-rose-500 text-white' 
+                   : 'bg-white text-gray-600 hover:bg-rose-100'
+               }`
+             }, `Fulfilled (${items.filter(item => item.purchased || getRemainingAmount(item) === 0).length})`)
+           ]),
+
+           // Gift Items Grid
+           React.createElement('div', {
+             key: "grid",
+             className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+           }, filteredItems.map((item) => {
+             const totalContributed = getTotalContributed(item);
+             const remaining = getRemainingAmount(item);
+             const progress = getProgressPercentage(item);
+             const isFullyFunded = remaining === 0 || item.purchased;
+
+             return React.createElement('div', {
+               key: item.id,
+               className: "bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+             }, React.createElement('div', {
+               className: "p-6"
+             }, [
+               // Item header
+               React.createElement('div', {
+                 key: "header",
+                 className: "flex justify-between items-start mb-3"
+               }, [
+                 React.createElement('h3', {
+                   key: "title",
+                   className: "text-lg font-semibold text-gray-800 leading-tight"
+                 }, item.item),
+                 isFullyFunded && React.createElement(Check, {
+                   key: "check",
+                   className: "w-6 h-6 text-green-500 flex-shrink-0 ml-2"
+                 })
+               ]),
+               
+               // Progress bar
+               React.createElement('div', {
+                 key: "progress",
+                 className: "mb-4"
+               }, [
+                 React.createElement('div', {
+                   key: "progress-text",
+                   className: "flex justify-between text-sm text-gray-600 mb-1"
+                 }, [
+                   React.createElement('span', { key: "goal" }, `Goal: £${item.price.toFixed(2)}`),
+                   React.createElement('span', { key: "percent" }, `${progress.toFixed(0)}% funded`)
+                 ]),
+                 React.createElement('div', {
+                   key: "progress-bar",
+                   className: "w-full bg-gray-200 rounded-full h-2"
+                 }, React.createElement('div', {
+                   className: `h-2 rounded-full transition-all duration-300 ${
+                     isFullyFunded ? 'bg-green-500' : 'bg-rose-500'
+                   }`,
+                   style: { width: `${progress}%` }
+                 }))
+               ]),
+
+               // Contributors
+               totalContributed > 0 && React.createElement('div', {
+                 key: "contributors",
+                 className: "mb-4"
+               }, [
+                 React.createElement('p', {
+                   key: "contributors-title",
+                   className: "text-sm text-gray-600 mb-2"
+                 }, "Contributors:"),
+                 React.createElement('div', {
+                   key: "contributors-list",
+                   className: "space-y-1"
+                 }, item.contributions.map((contrib, index) => 
+                   React.createElement('div', {
+                     key: index,
+                     className: "flex justify-between text-sm"
+                   }, [
+                     React.createElement('span', {
+                       key: "name",
+                       className: "text-gray-700"
+                     }, `Anonymous Guest ${index + 1}`),
+                     React.createElement('span', {
+                       key: "amount",
+                       className: "text-rose-600 font-medium"
+                     }, `£${contrib.amount.toFixed(2)}`)
+                   ])
+                 ))
+               ]),
+
+               // Summary
+               React.createElement('div', {
+                 key: "summary",
+                 className: "flex justify-between items-center text-sm text-gray-600 mb-4"
+               }, [
+                 React.createElement('span', { key: "contributed" }, `Contributed: £${totalContributed.toFixed(2)}`),
+                 React.createElement('span', { key: "remaining" }, `Remaining: £${remaining.toFixed(2)}`)
+               ]),
+
+               // Action buttons
+               React.createElement('div', {
+                 key: "actions",
+                 className: "flex space-x-2"
+               }, [
+                 !isFullyFunded && React.createElement('button', {
+                   key: "contribute",
+                   onClick: () => openContributionModal(item),
+                   className: "flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors font-medium flex items-center justify-center"
+                 }, [
+                   React.createElement(Gift, {
+                     key: "icon",
+                     className: "w-4 h-4 mr-2"
+                   }),
+                   "Contribute"
+                 ]),
+                 React.createElement('a', {
+                   key: "buy",
+                   href: item.url,
+                   target: "_blank",
+                   rel: "noopener noreferrer",
+                   className: `${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium flex items-center justify-center`
+                 }, [
+                   React.createElement(ExternalLink, {
+                     key: "icon",
+                     className: "w-4 h-4 mr-2"
+                   }),
+                   isFullyFunded ? 'View Item' : 'Buy Direct'
+                 ])
+               ])
+             ]));
+           })),
+
+           // Admin Panel
+           showAdminPanel && React.createElement('div', {
+             key: "admin",
+             className: "bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-8"
+           }, [
+             React.createElement('div', {
+               key: "admin-header",
+               className: "flex justify-between items-center mb-4"
+             }, [
+               React.createElement('h3', {
+                 key: "title",
+                 className: "text-xl font-semibold text-red-800"
+               }, "🔒 Admin: Contributor Details"),
+               React.createElement('button', {
+                 key: "close",
+                 onClick: () => setShowAdminPanel(false),
+                 className: "text-red-600 hover:text-red-800"
+               }, "✕ Close")
+             ]),
+             React.createElement('div', {
+               key: "admin-info",
+               className: "text-sm text-red-600 mb-4"
+             }, "Press Ctrl+Shift+A to toggle this panel | Firebase: ✅ Connected"),
+             items.filter(item => item.contributions.length > 0).length === 0 ? 
+               React.createElement('p', {
+                 key: "no-contributions",
+                 className: "text-gray-600 italic"
+               }, "No contributions yet") :
+               items.filter(item => item.contributions.length > 0).map(item => 
+                 React.createElement('div', {
+                   key: item.id,
+                   className: "mb-4 p-4 bg-white border rounded"
+                 }, [
+                   React.createElement('h4', {
+                     key: "item-title",
+                     className: "font-medium text-gray-800 mb-2"
+                   }, item.item),
+                   React.createElement('div', {
+                     key: "contributors",
+                     className: "space-y-1"
+                   }, item.contributions.map((contrib, index) => 
+                     React.createElement('div', {
+                       key: index,
+                       className: "flex justify-between text-sm"
+                     }, [
+                       React.createElement('span', {
+                         key: "name",
+                         className: "text-gray-700"
+                       }, contrib.name),
+                       React.createElement('span', {
+                         key: "amount",
+                         className: "font-medium text-green-600"
+                       }, `£${contrib.amount.toFixed(2)}`)
+                     ])
+                   )),
+                   React.createElement('div', {
+                     key: "total",
+                     className: "mt-2 pt-2 border-t text-sm font-medium"
+                   }, `Total for this item: £${getTotalContributed(item).toFixed(2)}`)
+                 ])
+               )
+           ]),
+
+           // Footer
+           React.createElement('div', {
+             key: "footer",
+             className: "text-center mt-12 p-6 bg-white rounded-lg shadow-lg"
+           }, [
+             React.createElement('p', {
+               key: "message",
+               className: "text-gray-600 mb-2"
+             }, "Your generosity means everything to us! If you have any questions, please don't hesitate to reach out."),
+             React.createElement('p', {
+               key: "signature",
+               className: "text-rose-600 font-medium"
+             }, "With love, Clara & Ross ❤️")
+           ])
+         ]));
+       };
+
+       ReactDOM.render(React.createElement(WeddingGiftRegistry), document.getElementById('root'));
+   </script>
+</body>
+</html>
