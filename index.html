@@ -301,7 +301,7 @@
               const newContribRef = await contributionsRef.push(contributionIntent);
               
               // Create PayPal Me URL with amount and reference
-              const paypalMeURL = `https://paypal.me/rossgroom?country.x=GB&locale.x=en_GB/${actualAmount.toFixed(2)}GBP`;
+              const paypalMeURL = `https://paypal.me/rossgroom/${actualAmount.toFixed(2)}?country.x=GB&locale.x=en_GB`;
               
               // Show payment instructions
               const paymentMessage = `You'll now be redirected to PayPal to complete your £${actualAmount.toFixed(2)} contribution for "${selectedItem.item}".\n\nAfter payment, your contribution will appear on the registry.\n\nReady to proceed?`;
