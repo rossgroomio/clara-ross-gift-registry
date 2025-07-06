@@ -6,7 +6,6 @@
     <title>Clara & Ross's Wedding Registry</title>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Firebase SDKs -->
@@ -32,8 +31,9 @@
         window.firebaseDB = firebase.database();
     </script>
     
-    <script type="text/babel">
+    <script>
         const { useState, useEffect } = React;
+        const { createElement: e } = React;
 
         const WeddingGiftRegistry = () => {
           const [items, setItems] = useState([]);
@@ -210,293 +210,298 @@
           };
 
           if (loading) {
-            return (
-              <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center">
-                <div className="text-center">
-                  <div className="w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading wedding registry...</p>
-                </div>
-              </div>
+            return e('div', {
+              className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 flex items-center justify-center"
+            }, 
+              e('div', { className: "text-center" }, [
+                e('div', {
+                  key: "loader",
+                  className: "w-8 h-8 border-4 border-rose-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"
+                }),
+                e('p', { key: "text", className: "text-gray-600" }, "Loading wedding registry...")
+              ])
             );
           }
 
-          return (
-            <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4">
-              <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-8 bg-white rounded-lg shadow-lg p-8">
-                  <div className="flex justify-center mb-4">
-                    <div className="w-12 h-12 text-rose-500">❤️</div>
-                  </div>
-                  <h1 className="text-4xl font-bold text-gray-800 mb-2">Clara & Ross's</h1>
-                  <h2 className="text-2xl text-rose-600 mb-4">Wedding Gift Registry</h2>
-                  <p className="text-gray-600 max-w-2xl mx-auto">
-                    Thank you for celebrating our special day with us! Your love and support mean the world to us. 
-                    You can contribute any amount toward the gifts below or purchase items directly.
-                  </p>
-                  {error && (
-                    <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md">
-                      <p className="text-yellow-800 text-sm">{error}</p>
-                      <button 
-                        onClick={loadDataFromFirebase}
-                        className="mt-2 text-yellow-800 underline text-sm hover:no-underline"
-                      >
-                        Try refreshing
-                      </button>
-                    </div>
-                  )}
-                </div>
+          return e('div', {
+            className: "min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4"
+          }, 
+            e('div', { className: "max-w-6xl mx-auto" }, [
+              // Header
+              e('div', {
+                key: "header",
+                className: "text-center mb-8 bg-white rounded-lg shadow-lg p-8"
+              }, [
+                e('div', { key: "heart", className: "flex justify-center mb-4" }, 
+                  e('div', { className: "text-4xl" }, "❤️")
+                ),
+                e('h1', { key: "title", className: "text-4xl font-bold text-gray-800 mb-2" }, "Clara & Ross's"),
+                e('h2', { key: "subtitle", className: "text-2xl text-rose-600 mb-4" }, "Wedding Gift Registry"),
+                e('p', { key: "description", className: "text-gray-600 max-w-2xl mx-auto" }, 
+                  "Thank you for celebrating our special day with us! Your love and support mean the world to us. You can contribute any amount toward the gifts below or purchase items directly."
+                ),
+                error && e('div', {
+                  key: "error",
+                  className: "mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md"
+                }, [
+                  e('p', { key: "error-text", className: "text-yellow-800 text-sm" }, error),
+                  e('button', {
+                    key: "refresh-btn",
+                    onClick: loadDataFromFirebase,
+                    className: "mt-2 text-yellow-800 underline text-sm hover:no-underline"
+                  }, "Try refreshing")
+                ])
+              ]),
 
-                <div className="text-center mb-4">
-                  <div className="inline-flex items-center space-x-2 text-sm">
-                    <div className={`w-2 h-2 rounded-full ${window.firebaseDB ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className="text-gray-600">
-                      {window.firebaseDB ? 'Connected to Firebase' : 'Demo mode - Firebase not configured'}
-                    </span>
-                  </div>
-                </div>
+              // Connection Status
+              e('div', { key: "status", className: "text-center mb-4" },
+                e('div', { className: "inline-flex items-center space-x-2 text-sm" }, [
+                  e('div', {
+                    key: "indicator",
+                    className: `w-2 h-2 rounded-full ${window.firebaseDB ? 'bg-green-500' : 'bg-yellow-500'}`
+                  }),
+                  e('span', { key: "text", className: "text-gray-600" }, 
+                    window.firebaseDB ? 'Connected to Firebase' : 'Demo mode - Firebase not configured'
+                  )
+                ])
+              ),
 
-                <div className="flex justify-center mb-6 space-x-4">
-                  <button
-                    onClick={() => setFilter('all')}
-                    className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                      filter === 'all' 
-                        ? 'bg-rose-500 text-white' 
-                        : 'bg-white text-gray-600 hover:bg-rose-100'
-                    }`}
-                  >
-                    All Items ({items.length})
-                  </button>
-                  <button
-                    onClick={() => setFilter('available')}
-                    className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                      filter === 'available' 
-                        ? 'bg-rose-500 text-white' 
-                        : 'bg-white text-gray-600 hover:bg-rose-100'
-                    }`}
-                  >
-                    Available ({items.filter(item => !item.purchased && getRemainingAmount(item) > 0).length})
-                  </button>
-                  <button
-                    onClick={() => setFilter('purchased')}
-                    className={`px-6 py-2 rounded-full font-medium transition-colors ${
-                      filter === 'purchased' 
-                        ? 'bg-rose-500 text-white' 
-                        : 'bg-white text-gray-600 hover:bg-rose-100'
-                    }`}
-                  >
-                    Fulfilled ({items.filter(item => item.purchased || getRemainingAmount(item) === 0).length})
-                  </button>
-                </div>
+              // Filter Buttons
+              e('div', { key: "filters", className: "flex justify-center mb-6 space-x-4" }, [
+                e('button', {
+                  key: "all",
+                  onClick: () => setFilter('all'),
+                  className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                    filter === 'all' 
+                      ? 'bg-rose-500 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-rose-100'
+                  }`
+                }, `All Items (${items.length})`),
+                e('button', {
+                  key: "available",
+                  onClick: () => setFilter('available'),
+                  className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                    filter === 'available' 
+                      ? 'bg-rose-500 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-rose-100'
+                  }`
+                }, `Available (${items.filter(item => !item.purchased && getRemainingAmount(item) > 0).length})`),
+                e('button', {
+                  key: "purchased",
+                  onClick: () => setFilter('purchased'),
+                  className: `px-6 py-2 rounded-full font-medium transition-colors ${
+                    filter === 'purchased' 
+                      ? 'bg-rose-500 text-white' 
+                      : 'bg-white text-gray-600 hover:bg-rose-100'
+                  }`
+                }, `Fulfilled (${items.filter(item => item.purchased || getRemainingAmount(item) === 0).length})`)
+              ]),
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {filteredItems.map((item) => {
-                    const totalContributed = getTotalContributed(item);
-                    const remaining = getRemainingAmount(item);
-                    const progress = getProgressPercentage(item);
-                    const isFullyFunded = remaining === 0 || item.purchased;
+              // Gift Items Grid
+              e('div', { key: "grid", className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" },
+                filteredItems.map((item) => {
+                  const totalContributed = getTotalContributed(item);
+                  const remaining = getRemainingAmount(item);
+                  const progress = getProgressPercentage(item);
+                  const isFullyFunded = remaining === 0 || item.purchased;
 
-                    return (
-                      <div key={item.id} className="bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow">
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-3">
-                            <h3 className="text-lg font-semibold text-gray-800 leading-tight">{item.item}</h3>
-                            {isFullyFunded && <span className="text-green-500 text-xl">✓</span>}
-                          </div>
-                          
-                          <div className="mb-4">
-                            <div className="flex justify-between text-sm text-gray-600 mb-1">
-                              <span>Goal: £{item.price.toFixed(2)}</span>
-                              <span>{progress.toFixed(0)}% funded</span>
-                            </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
-                              <div 
-                                className={`h-2 rounded-full transition-all duration-300 ${
-                                  isFullyFunded ? 'bg-green-500' : 'bg-rose-500'
-                                }`}
-                                style={{ width: `${progress}%` }}
-                              ></div>
-                            </div>
-                          </div>
-
-                          {totalContributed > 0 && (
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-600 mb-2">Contributors:</p>
-                              <div className="space-y-1">
-                                {item.contributions.map((contrib, index) => (
-                                  <div key={index} className="flex justify-between text-sm">
-                                    <span className="text-gray-700">Anonymous Guest {index + 1}</span>
-                                    <span className="text-rose-600 font-medium">£{contrib.amount.toFixed(2)}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          <div className="flex justify-between items-center text-sm text-gray-600 mb-4">
-                            <span>Contributed: £{totalContributed.toFixed(2)}</span>
-                            <span>Remaining: £{remaining.toFixed(2)}</span>
-                          </div>
-
-                          <div className="flex space-x-2">
-                            {!isFullyFunded && (
-                              <button
-                                onClick={() => openContributionModal(item)}
-                                className="flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors font-medium"
-                              >
-                                🎁 Contribute
-                              </button>
-                            )}
-                            
-                              href={item.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium text-center`}
-                            >
-                              🔗 {isFullyFunded ? 'View Item' : 'Buy Direct'}
-                            </a>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {showContributionModal && selectedItem && (
-                  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                      <h3 className="text-xl font-semibold mb-4">Contribute to: {selectedItem.item}</h3>
+                  return e('div', {
+                    key: item.id,
+                    className: "bg-white rounded-lg shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                  },
+                    e('div', { className: "p-6" }, [
+                      // Item header
+                      e('div', { key: "header", className: "flex justify-between items-start mb-3" }, [
+                        e('h3', { key: "title", className: "text-lg font-semibold text-gray-800 leading-tight" }, item.item),
+                        isFullyFunded && e('span', { key: "check", className: "text-green-500 text-xl" }, "✓")
+                      ]),
                       
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-2">Remaining amount needed: £{getRemainingAmount(selectedItem).toFixed(2)}</p>
-                      </div>
+                      // Progress bar
+                      e('div', { key: "progress", className: "mb-4" }, [
+                        e('div', { key: "progress-text", className: "flex justify-between text-sm text-gray-600 mb-1" }, [
+                          e('span', { key: "goal" }, `Goal: £${item.price.toFixed(2)}`),
+                          e('span', { key: "percent" }, `${progress.toFixed(0)}% funded`)
+                        ]),
+                        e('div', { key: "progress-bar", className: "w-full bg-gray-200 rounded-full h-2" },
+                          e('div', {
+                            className: `h-2 rounded-full transition-all duration-300 ${
+                              isFullyFunded ? 'bg-green-500' : 'bg-rose-500'
+                            }`,
+                            style: { width: `${progress}%` }
+                          })
+                        )
+                      ]),
 
-                      {error && (
-                        <div className="mb-4 p-3 bg-red-100 border border-red-300 rounded-md">
-                          <p className="text-red-800 text-sm">{error}</p>
-                        </div>
-                      )}
+                      // Contributors
+                      totalContributed > 0 && e('div', { key: "contributors", className: "mb-4" }, [
+                        e('p', { key: "contributors-title", className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
+                        e('div', { key: "contributors-list", className: "space-y-1" },
+                          item.contributions.map((contrib, index) => 
+                            e('div', { key: index, className: "flex justify-between text-sm" }, [
+                              e('span', { key: "name", className: "text-gray-700" }, `Anonymous Guest ${index + 1}`),
+                              e('span', { key: "amount", className: "text-rose-600 font-medium" }, `£${contrib.amount.toFixed(2)}`)
+                            ])
+                          )
+                        )
+                      ]),
 
-                      <div className="mb-4">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Your Name
-                        </label>
-                        <input
-                          type="text"
-                          value={guestName}
-                          onChange={(e) => setGuestName(e.target.value)}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                          placeholder="Enter your name"
-                          disabled={saving}
-                        />
-                      </div>
+                      // Summary
+                      e('div', { key: "summary", className: "flex justify-between items-center text-sm text-gray-600 mb-4" }, [
+                        e('span', { key: "contributed" }, `Contributed: £${totalContributed.toFixed(2)}`),
+                        e('span', { key: "remaining" }, `Remaining: £${remaining.toFixed(2)}`)
+                      ]),
 
-                      <div className="mb-6">
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Contribution Amount
-                        </label>
-                        <input
-                          type="number"
-                          value={contributionAmount}
-                          onChange={(e) => setContributionAmount(e.target.value)}
-                          className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500"
-                          placeholder="0.00"
-                          min="1"
-                          max={getRemainingAmount(selectedItem)}
-                          step="0.01"
-                          disabled={saving}
-                        />
-                      </div>
+                      // Action buttons
+                      e('div', { key: "actions", className: "flex space-x-2" }, [
+                        !isFullyFunded && e('button', {
+                          key: "contribute",
+                          onClick: () => openContributionModal(item),
+                          className: "flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors font-medium"
+                        }, "🎁 Contribute"),
+                        e('a', {
+                          key: "buy",
+                          href: item.url,
+                          target: "_blank",
+                          rel: "noopener noreferrer",
+                          className: `${isFullyFunded ? 'flex-1' : 'flex-shrink-0'} bg-gray-100 text-gray-700 py-2 px-4 rounded-md hover:bg-gray-200 transition-colors font-medium text-center`
+                        }, `🔗 ${isFullyFunded ? 'View Item' : 'Buy Direct'}`)
+                      ])
+                    ])
+                  );
+                })
+              ),
 
-                      <div className="flex space-x-3">
-                        <button
-                          onClick={() => setShowContributionModal(false)}
-                          className="flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors"
-                          disabled={saving}
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          onClick={handleContribution}
-                          disabled={!guestName || !contributionAmount || parseFloat(contributionAmount) <= 0 || saving}
-                          className="flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
-                        >
-                          {saving ? '⏳ Saving...' : 'Contribute'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
+              // Contribution Modal
+              showContributionModal && selectedItem && e('div', {
+                key: "modal",
+                className: "fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+              },
+                e('div', { className: "bg-white rounded-lg p-6 w-full max-w-md" }, [
+                  e('h3', { key: "modal-title", className: "text-xl font-semibold mb-4" }, `Contribute to: ${selectedItem.item}`),
+                  
+                  e('div', { key: "modal-remaining", className: "mb-4" },
+                    e('p', { className: "text-sm text-gray-600 mb-2" }, `Remaining amount needed: £${getRemainingAmount(selectedItem).toFixed(2)}`)
+                  ),
 
-                {showAdminPanel && (
-                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-8">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-xl font-semibold text-red-800">🔒 Admin: Contributor Details</h3>
-                      <div className="flex space-x-2">
-                        <button 
-                          onClick={loadDataFromFirebase}
-                          className="text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-100 rounded"
-                          disabled={loading}
-                        >
-                          {loading ? '⏳' : '🔄 Refresh Data'}
-                        </button>
-                        <button 
-                          onClick={() => setShowAdminPanel(false)}
-                          className="text-red-600 hover:text-red-800"
-                        >
-                          ✕ Close
-                        </button>
-                      </div>
-                    </div>
-                    <div className="text-sm text-red-600 mb-4">
-                      Press Ctrl+Shift+A to toggle this panel | Firebase: {window.firebaseDB ? '✅ Connected' : '❌ Not configured'}
-                    </div>
-                    
-                    {items.filter(item => item.contributions.length > 0).length === 0 ? (
-                      <p className="text-gray-600 italic">No contributions yet</p>
-                    ) : (
-                      items.filter(item => item.contributions.length > 0).map(item => (
-                        <div key={item.id} className="mb-4 p-4 bg-white border rounded">
-                          <h4 className="font-medium text-gray-800 mb-2">{item.item}</h4>
-                          <div className="space-y-1">
-                            {item.contributions.map((contrib, index) => (
-                              <div key={index} className="flex justify-between text-sm">
-                                <span className="text-gray-700">{contrib.name}</span>
-                                <span className="font-medium text-green-600">£{contrib.amount.toFixed(2)}</span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-2 pt-2 border-t text-sm font-medium">
-                            Total for this item: £{getTotalContributed(item).toFixed(2)}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                    
-                    {items.filter(item => item.contributions.length > 0).length > 0 && (
-                      <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded">
-                        <h4 className="font-medium text-green-800 mb-2">Summary</h4>
-                        <div className="text-sm">
-                          <p>Total contributions: £{items.reduce((total, item) => total + getTotalContributed(item), 0).toFixed(2)}</p>
-                          <p>Number of contributors: {items.reduce((total, item) => total + item.contributions.length, 0)}</p>
-                          <p>Items with contributions: {items.filter(item => item.contributions.length > 0).length}</p>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
+                  error && e('div', { key: "modal-error", className: "mb-4 p-3 bg-red-100 border border-red-300 rounded-md" },
+                    e('p', { className: "text-red-800 text-sm" }, error)
+                  ),
 
-                <div className="text-center mt-12 p-6 bg-white rounded-lg shadow-lg">
-                  <p className="text-gray-600 mb-2">
-                    Your generosity means everything to us! If you have any questions, please don't hesitate to reach out.
-                  </p>
-                  <p className="text-rose-600 font-medium">With love, Clara & Ross ❤️</p>
-                </div>
-              </div>
-            </div>
+                  e('div', { key: "modal-name", className: "mb-4" }, [
+                    e('label', { key: "name-label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Your Name"),
+                    e('input', {
+                      key: "name-input",
+                      type: "text",
+                      value: guestName,
+                      onChange: (e) => setGuestName(e.target.value),
+                      className: "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500",
+                      placeholder: "Enter your name",
+                      disabled: saving
+                    })
+                  ]),
+
+                  e('div', { key: "modal-amount", className: "mb-6" }, [
+                    e('label', { key: "amount-label", className: "block text-sm font-medium text-gray-700 mb-2" }, "Contribution Amount"),
+                    e('input', {
+                      key: "amount-input",
+                      type: "number",
+                      value: contributionAmount,
+                      onChange: (e) => setContributionAmount(e.target.value),
+                      className: "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500",
+                      placeholder: "0.00",
+                      min: "1",
+                      max: getRemainingAmount(selectedItem),
+                      step: "0.01",
+                      disabled: saving
+                    })
+                  ]),
+
+                  e('div', { key: "modal-buttons", className: "flex space-x-3" }, [
+                    e('button', {
+                      key: "cancel",
+                      onClick: () => setShowContributionModal(false),
+                      className: "flex-1 bg-gray-200 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-300 transition-colors",
+                      disabled: saving
+                    }, "Cancel"),
+                    e('button', {
+                      key: "contribute",
+                      onClick: handleContribution,
+                      disabled: !guestName || !contributionAmount || parseFloat(contributionAmount) <= 0 || saving,
+                      className: "flex-1 bg-rose-500 text-white py-2 px-4 rounded-md hover:bg-rose-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
+                    }, saving ? "⏳ Saving..." : "Contribute")
+                  ])
+                ])
+              ),
+
+              // Admin Panel
+              showAdminPanel && e('div', {
+                key: "admin",
+                className: "bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-8"
+              }, [
+                e('div', { key: "admin-header", className: "flex justify-between items-center mb-4" }, [
+                  e('h3', { key: "title", className: "text-xl font-semibold text-red-800" }, "🔒 Admin: Contributor Details"),
+                  e('div', { key: "admin-controls", className: "flex space-x-2" }, [
+                    e('button', {
+                      key: "refresh",
+                      onClick: loadDataFromFirebase,
+                      className: "text-blue-600 hover:text-blue-800 text-sm px-3 py-1 bg-blue-100 rounded",
+                      disabled: loading
+                    }, loading ? "⏳" : "🔄 Refresh"),
+                    e('button', {
+                      key: "close",
+                      onClick: () => setShowAdminPanel(false),
+                      className: "text-red-600 hover:text-red-800"
+                    }, "✕ Close")
+                  ])
+                ]),
+                e('div', { key: "admin-info", className: "text-sm text-red-600 mb-4" }, 
+                  `Press Ctrl+Shift+A to toggle this panel | Firebase: ${window.firebaseDB ? '✅ Connected' : '❌ Not configured'}`
+                ),
+                items.filter(item => item.contributions.length > 0).length === 0 ? 
+                  e('p', { key: "no-contributions", className: "text-gray-600 italic" }, "No contributions yet") :
+                  [
+                    ...items.filter(item => item.contributions.length > 0).map(item => 
+                      e('div', { key: item.id, className: "mb-4 p-4 bg-white border rounded" }, [
+                        e('h4', { key: "item-title", className: "font-medium text-gray-800 mb-2" }, item.item),
+                        e('div', { key: "contributors", className: "space-y-1" },
+                          item.contributions.map((contrib, index) => 
+                            e('div', { key: index, className: "flex justify-between text-sm" }, [
+                              e('span', { key: "name", className: "text-gray-700" }, contrib.name),
+                              e('span', { key: "amount", className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`)
+                            ])
+                          )
+                        ),
+                        e('div', { key: "total", className: "mt-2 pt-2 border-t text-sm font-medium" }, 
+                          `Total for this item: £${getTotalContributed(item).toFixed(2)}`
+                        )
+                      ])
+                    ),
+                    items.filter(item => item.contributions.length > 0).length > 0 && e('div', {
+                      key: "summary",
+                      className: "mt-6 p-4 bg-green-50 border border-green-200 rounded"
+                    }, [
+                      e('h4', { key: "summary-title", className: "font-medium text-green-800 mb-2" }, "Summary"),
+                      e('div', { key: "summary-stats", className: "text-sm" }, [
+                        e('p', { key: "total-contrib" }, `Total contributions: £${items.reduce((total, item) => total + getTotalContributed(item), 0).toFixed(2)}`),
+                        e('p', { key: "num-contrib" }, `Number of contributors: ${items.reduce((total, item) => total + item.contributions.length, 0)}`),
+                        e('p', { key: "items-contrib" }, `Items with contributions: ${items.filter(item => item.contributions.length > 0).length}`)
+                      ])
+                    ])
+                  ]
+              ),
+
+              // Footer
+              e('div', { key: "footer", className: "text-center mt-12 p-6 bg-white rounded-lg shadow-lg" }, [
+                e('p', { key: "message", className: "text-gray-600 mb-2" }, 
+                  "Your generosity means everything to us! If you have any questions, please don't hesitate to reach out."
+                ),
+                e('p', { key: "signature", className: "text-rose-600 font-medium" }, "With love, Clara & Ross ❤️")
+              ])
+            ])
           );
         };
 
-        ReactDOM.render(<WeddingGiftRegistry />, document.getElementById('root'));
+        ReactDOM.render(React.createElement(WeddingGiftRegistry), document.getElementById('root'));
     </script>
 </body>
 </html>
