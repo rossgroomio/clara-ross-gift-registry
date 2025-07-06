@@ -165,7 +165,10 @@
           }
 
           function getRemainingAmount(item) {
-            return Math.max(0, item.price - getTotalContributed(item));
+            const contributed = getTotalContributed(item);
+            const remaining = item.price - contributed;
+            // Handle floating point precision issues
+            return Math.max(0, Math.round(remaining * 100) / 100);
           }
 
           function getProgressPercentage(item) {
@@ -173,8 +176,11 @@
           }
 
           const filteredItems = items.filter(item => {
-            if (filter === 'available') return !item.purchased && getRemainingAmount(item) > 0;
-            if (filter === 'purchased') return item.purchased || getRemainingAmount(item) === 0;
+            const totalContributed = getTotalContributed(item);
+            const isFullyFunded = totalContributed >= item.price || Math.round((item.price - totalContributed) * 100) / 100 <= 0;
+              
+            if (filter === 'available') return !isFullyFunded;
+            if (filter === 'purchased') return isFullyFunded;
             return true;
           });
 
