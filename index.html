@@ -463,7 +463,7 @@
                             
                             return React.createElement('div', { key: index, className: "flex justify-between items-center text-sm mb-1" },
                               React.createElement('div', { className: "flex-1" },
-                                React.createElement('span', { className: "text-gray-700" }, contrib.name),
+                                React.createElement('span', { className: "text-gray-700" }, "A generous guest"),
                                 React.createElement('span', { 
                                   className: `ml-2 px-2 py-1 rounded text-xs ${
                                     status === 'confirmed' ? 'bg-green-100 text-green-800' :
@@ -471,16 +471,13 @@
                                     status === 'pending_payment' ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-gray-100 text-gray-800'
                                   }`
-                                }, status),
-                                React.createElement('span', { className: "ml-1 text-xs text-gray-500" }, 
-                                  `(ID: ${contrib.id ? contrib.id.substring(0,6) : 'none'})`
-                                )
+                                }, status)
                               ),
                               React.createElement('div', { className: "flex items-center space-x-2" },
                                 React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`),
                                 isPending && React.createElement('button', {
                                   onClick: async () => {
-                                    if (confirm(`Mark ${contrib.name}'s payment as confirmed?`)) {
+                                    if (confirm(`Mark this payment as confirmed?`)) {
                                       try {
                                         if (!contrib.id) {
                                           alert('Error: Contribution ID missing. Cannot confirm payment.');
@@ -490,11 +487,11 @@
                                         console.log('Confirming payment for:', { name: contrib.name, id: contrib.id });
                                         await updatePaymentStatus(contrib.id, 'confirmed');
                                         console.log('Payment confirmed successfully for', contrib.name);
-                                        alert(`Payment confirmed for ${contrib.name}!`);
+                                        alert(`Payment confirmed!`);
                                         
                                       } catch (error) {
                                         console.error('Error confirming payment:', error);
-                                        alert(`Error confirming payment for ${contrib.name}: ${error.message}`);
+                                        alert(`Error confirming payment: ${error.message}`);
                                       }
                                     }
                                   },
