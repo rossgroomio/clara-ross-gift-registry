@@ -35,36 +35,62 @@
     <script type="text/babel">
         const { useState, useEffect } = React;
 
-        // Simple icon components (replacing Lucide)
-        const Heart = ({ className }) => (
-          <svg className={className} fill="currentColor" viewBox="0 0 24 24">
-            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-          </svg>
-        );
+        // Simple icon components
+        const Heart = ({ className }) => React.createElement('svg', {
+          className: className,
+          fill: 'currentColor',
+          viewBox: '0 0 24 24'
+        }, React.createElement('path', {
+          d: 'M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z'
+        }));
 
-        const ExternalLink = ({ className }) => (
-          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
-          </svg>
-        );
+        const ExternalLink = ({ className }) => React.createElement('svg', {
+          className: className,
+          fill: 'none',
+          stroke: 'currentColor',
+          viewBox: '0 0 24 24'
+        }, React.createElement('path', {
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeWidth: 2,
+          d: 'M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14'
+        }));
 
-        const Check = ({ className }) => (
-          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
-          </svg>
-        );
+        const Check = ({ className }) => React.createElement('svg', {
+          className: className,
+          fill: 'none',
+          stroke: 'currentColor',
+          viewBox: '0 0 24 24'
+        }, React.createElement('path', {
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeWidth: 2,
+          d: 'M5 13l4 4L19 7'
+        }));
 
-        const Gift = ({ className }) => (
-          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-          </svg>
-        );
+        const Gift = ({ className }) => React.createElement('svg', {
+          className: className,
+          fill: 'none',
+          stroke: 'currentColor',
+          viewBox: '0 0 24 24'
+        }, React.createElement('path', {
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeWidth: 2,
+          d: 'M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7'
+        }));
 
-        const Loader2 = ({ className }) => (
-          <svg className={className} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.49-8.49l2.83-2.83"/>
-          </svg>
-        );
+        const Loader2 = ({ className }) => React.createElement('svg', {
+          className: className,
+          fill: 'none',
+          stroke: 'currentColor',
+          viewBox: '0 0 24 24'
+        }, React.createElement('path', {
+          strokeLinecap: 'round',
+          strokeLinejoin: 'round',
+          strokeWidth: 2,
+          d: 'M12 2v4m0 12v4M4.93 4.93l2.83 2.83m8.49 8.49l2.83 2.83M2 12h4m12 0h4M4.93 19.07l2.83-2.83m8.49-8.49l2.83-2.83'
+        }));
 
         const WeddingGiftRegistry = () => {
           const [items, setItems] = useState([]);
@@ -254,7 +280,6 @@
           return (
             <div className="min-h-screen bg-gradient-to-br from-rose-50 to-pink-100 p-4">
               <div className="max-w-6xl mx-auto">
-                {/* Header */}
                 <div className="text-center mb-8 bg-white rounded-lg shadow-lg p-8">
                   <div className="flex justify-center mb-4">
                     <Heart className="w-12 h-12 text-rose-500" />
@@ -278,7 +303,6 @@
                   )}
                 </div>
 
-                {/* Connection Status */}
                 <div className="text-center mb-4">
                   <div className="inline-flex items-center space-x-2 text-sm">
                     <div className={`w-2 h-2 rounded-full ${window.firebaseDB ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
@@ -288,7 +312,6 @@
                   </div>
                 </div>
 
-                {/* Filter Buttons */}
                 <div className="flex justify-center mb-6 space-x-4">
                   <button
                     onClick={() => setFilter('all')}
@@ -322,7 +345,6 @@
                   </button>
                 </div>
 
-                {/* Gift Items Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {filteredItems.map((item) => {
                     const totalContributed = getTotalContributed(item);
@@ -335,9 +357,7 @@
                         <div className="p-6">
                           <div className="flex justify-between items-start mb-3">
                             <h3 className="text-lg font-semibold text-gray-800 leading-tight">{item.item}</h3>
-                            {isFullyFunded && (
-                              <Check className="w-6 h-6 text-green-500 flex-shrink-0 ml-2" />
-                            )}
+                            {isFullyFunded && <Check className="w-6 h-6 text-green-500 flex-shrink-0 ml-2" />}
                           </div>
                           
                           <div className="mb-4">
@@ -400,7 +420,6 @@
                   })}
                 </div>
 
-                {/* Contribution Modal */}
                 {showContributionModal && selectedItem && (
                   <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-white rounded-lg p-6 w-full max-w-md">
@@ -474,7 +493,6 @@
                   </div>
                 )}
 
-                {/* Admin Panel - Toggle with Ctrl+Shift+A */}
                 {showAdminPanel && (
                   <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 mt-8">
                     <div className="flex justify-between items-center mb-4">
@@ -533,7 +551,6 @@
                   </div>
                 )}
 
-                {/* Footer */}
                 <div className="text-center mt-12 p-6 bg-white rounded-lg shadow-lg">
                   <p className="text-gray-600 mb-2">
                     Your generosity means everything to us! If you have any questions, please don't hesitate to reach out.
