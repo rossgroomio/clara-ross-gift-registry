@@ -186,29 +186,64 @@
 
           async function handleContribution() {
             if (!guestName || !contributionAmount || !selectedItem) return;
-
+            
+            // Sanitize inputs
+            const cleanName = sanitizeInput ? sanitizeInput(guestName) : guestName.trim();
             const amount = parseFloat(contributionAmount);
-            const remaining = getRemainingAmount(selectedItem);
-            const actualAmount = Math.min(amount, remaining);
-
-            setSaving(true);
-            setError(null);
-
-            try {
-              await saveContributionToFirebase(selectedItem.id, guestName, actualAmount);
               
-              setShowContributionModal(false);
-              setGuestName('');
-              setContributionAmount('');
-              setSelectedItem(null);
-              
-              // Data will auto-refresh via the real-time listener
-            } catch (err) {
-              setError('Failed to save contribution. Please try again.');
-              console.error('Contribution error:', err);
-            } finally {
-              setSaving(false);
+            // Basic validation
+            if (cleanName.length < 2 || cleanName.length > 50) {
+              setError('Name must be 2-50 characters');
+              return;
             }
+              
+            if (amount < 0.01 || amount > 1000) {
+              setError('Amount must be between £0.01 and £1000');
+              return;
+            }
+            
+            const remaining = getRemainingAmount(selectedItem);
+              
+            // Check if item is already fully funded
+            if (remaining <= 0) {
+              setError('This item has already been fully funded! Please refresh the page.');
+              return;
+            }
+              
+            const actualAmount = Math.min(amount, remaining);
+              
+            // Warn user if their contribution will be reduced
+            if (actualAmount < amount) {
+              const reduction = amount - actualAmount;
+              const confirmMessage = `This item only needs £${remaining.toFixed(2)} more to be fully funded.\n\nYour contribution will be reduced from £${amount.toFixed(2)} to £${actualAmount.toFixed(2)} (saving you £${reduction.toFixed(2)}).\n\nProceed with £${actualAmount.toFixed(2)}?`;
+                
+              if (!confirm(confirmMessage)) {
+                return; // User cancelled
+                }
+              }
+            
+              setSaving(true);
+              setError(null);
+            
+              try {
+                await saveContributionToFirebase(selectedItem.id, cleanName, actualAmount);
+                
+                // Success message with actual amount
+                if (actualAmount < amount) {
+                  alert(`Thank you! Your contribution of £${actualAmount.toFixed(2)} has made this item fully funded! 🎉`);
+                }
+                
+                setShowContributionModal(false);
+                setGuestName('');
+                setContributionAmount('');
+                setSelectedItem(null);
+                
+              } catch (err) {
+                setError('Failed to save contribution. Please try again.');
+                console.error('Contribution error:', err);
+              } finally {
+                setSaving(false);
+              }
           }
 
           function openContributionModal(item) {
