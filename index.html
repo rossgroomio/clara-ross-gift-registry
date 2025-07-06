@@ -173,7 +173,9 @@
           }, [showAdminPanel]);
 
           function getTotalContributed(item) {
-            return item.contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
+            return item.contributions
+            .filter(contrib => contrib.status === 'paid' || contrib.status === 'confirmed')
+            .reduce((sum, contrib) => sum + contrib.amount, 0);
           }
 
           function getRemainingAmount(item) {
@@ -197,65 +199,86 @@
           });
 
           async function handleContribution() {
-            if (!guestName || !contributionAmount || !selectedItem) return;
-            
-            // Sanitize inputs
-            const cleanName = sanitizeInput(guestName);
+            if (!guestName || !contributionAmount || !selectedItem) return;          
+
+            const cleanName = guestName.trim();
             const amount = parseFloat(contributionAmount);
-              
+            
             // Basic validation
             if (cleanName.length < 2 || cleanName.length > 50) {
               setError('Name must be 2-50 characters');
               return;
             }
-              
+            
             if (amount < 0.01 || amount > 1000) {
               setError('Amount must be between £0.01 and £1000');
               return;
-            }
-            
+            }          
+
             const remaining = getRemainingAmount(selectedItem);
-              
-            // Check if item is already fully funded
+            
             if (remaining <= 0) {
               setError('This item has already been fully funded! Please refresh the page.');
               return;
             }
-              
+            
             const actualAmount = Math.min(amount, remaining);
-              
+            
             // Warn user if their contribution will be reduced
             if (actualAmount < amount) {
               const reduction = amount - actualAmount;
-              const confirmMessage = `This item only needs £${remaining.toFixed(2)} more to be fully funded.\n\nYour contribution will be reduced from £${amount.toFixed(2)} to £${actualAmount.toFixed(2)} (saving you £${reduction.toFixed(2)}).\n\nProceed with £${actualAmount.toFixed(2)}?`;
-                
+              const confirmMessage = `This item only needs £${remaining.toFixed(2)} more to be fully funded.\n\nYour contribution will be reduced from £${amount.toFixed(2)} to £${actualAmount.toFixed(2)}.\n\nProceed with £${actualAmount.toFixed(2)}?`;
+              
               if (!confirm(confirmMessage)) {
-                return; // User cancelled
-                }
+                return;
               }
-            
-              setSaving(true);
-              setError(null);
-            
-              try {
-                await saveContributionToFirebase(selectedItem.id, cleanName, actualAmount);
+            }          
+
+            setSaving(true);
+            setError(null);          
+
+            try {
+              // Record the contribution intent in Firebase
+              const contributionIntent = {
+                itemId: selectedItem.id,
+                itemName: selectedItem.item,
+                name: cleanName,
+                amount: actualAmount,
+                status: 'pending_payment', // New status field
+                timestamp: new Date().toISOString()
+              };          
+
+              const contributionsRef = window.firebaseDB.ref('contributions');
+              const newContribRef = await contributionsRef.push(contributionIntent);
+              
+              // Create PayPal Me URL with amount and reference
+              const paypalMeURL = `https://paypal.me/claraandross/${actualAmount.toFixed(2)}GBP`;
+              
+              // Show payment instructions
+              const paymentMessage = `You'll now be redirected to PayPal to complete your £${actualAmount.toFixed(2)} contribution for "${selectedItem.item}".\n\nAfter payment, your contribution will appear on the registry.\n\nReady to proceed?`;
+              
+              if (confirm(paymentMessage)) {
+                // Open PayPal in new window
+                window.open(paypalMeURL, '_blank', 'noopener,noreferrer');
                 
-                // Success message with actual amount
-                if (actualAmount < amount) {
-                  alert(`Thank you! Your contribution of £${actualAmount.toFixed(2)} has made this item fully funded! 🎉`);
-                }
-                
+                // Close the modal and show success message
                 setShowContributionModal(false);
                 setGuestName('');
                 setContributionAmount('');
                 setSelectedItem(null);
                 
-              } catch (err) {
-                setError('Failed to save contribution. Please try again.');
-                console.error('Contribution error:', err);
-              } finally {
-                setSaving(false);
+                alert('Thank you! Please complete your payment in the PayPal window that just opened. Your contribution will appear here once payment is confirmed.');
+              } else {
+                // User cancelled, remove the pending contribution
+                await newContribRef.remove();
               }
+              
+            } catch (err) {
+              setError('Failed to process contribution. Please try again.');
+              console.error('Contribution error:', err);
+            } finally {
+              setSaving(false);
+            }
           }
 
           function openContributionModal(item) {
@@ -386,9 +409,35 @@
                         React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, "Contributors:"),
                         React.createElement('div', { className: "space-y-1" },
                           ...item.contributions.map((contrib, index) => 
-                            React.createElement('div', { key: index, className: "flex justify-between text-sm" },
-                              React.createElement('span', { className: "text-gray-700" }, `Anonymous Guest ${index + 1}`),
-                              React.createElement('span', { className: "text-rose-600 font-medium" }, `£${contrib.amount.toFixed(2)}`)
+                            React.createElement('div', { key: index, className: "flex justify-between items-center text-sm mb-1" },
+                              React.createElement('div', { className: "flex-1" },
+                                React.createElement('span', { className: "text-gray-700" }, contrib.name),
+                                React.createElement('span', { 
+                                  className: `ml-2 px-2 py-1 rounded text-xs ${
+                                    contrib.status === 'confirmed' ? 'bg-green-100 text-green-800' :
+                                    contrib.status === 'paid' ? 'bg-blue-100 text-blue-800' :
+                                    'bg-yellow-100 text-yellow-800'
+                                  }`
+                                }, contrib.status || 'confirmed')
+                              ),
+                              React.createElement('div', { className: "flex items-center space-x-2" },
+                                React.createElement('span', { className: "font-medium text-green-600" }, `£${contrib.amount.toFixed(2)}`),
+                                (contrib.status === 'pending_payment') && React.createElement('button', {
+                                  onClick: async () => {
+                                    if (confirm(`Mark ${contrib.name}'s payment as confirmed?`)) {
+                                      try {
+                                        const contributionRef = window.firebaseDB.ref(`contributions/${contrib.id}`);
+                                        await contributionRef.update({ status: 'confirmed' });
+                                        console.log('Payment confirmed for', contrib.name);
+                                      } catch (error) {
+                                        console.error('Error confirming payment:', error);
+                                        alert('Error confirming payment. Please try again.');
+                                      }
+                                    }
+                                  },
+                                  className: "text-xs bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                                }, "✓ Confirm")
+                              )
                             )
                           )
                         )
