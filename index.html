@@ -162,21 +162,46 @@
 
           // Enhanced function to update payment status
           async function updatePaymentStatus(contributionId, newStatus) {
+            console.log('Attempting to update payment status:', { contributionId, newStatus });
+            
             try {
               if (!window.firebaseDB) {
                 throw new Error('Firebase not configured');
               }
 
+              if (!contributionId) {
+                throw new Error('Contribution ID is required');
+              }
+
+              console.log('Firebase connection exists, updating contribution:', contributionId);
+              
               const contributionRef = window.firebaseDB.ref(`contributions/${contributionId}`);
+              
+              // First check if the contribution exists
+              const snapshot = await contributionRef.once('value');
+              if (!snapshot.exists()) {
+                throw new Error(`Contribution ${contributionId} not found in database`);
+              }
+              
+              console.log('Contribution found, updating status...');
+              
               await contributionRef.update({ 
                 status: newStatus,
                 statusUpdatedAt: new Date().toISOString()
               });
               
               console.log(`Payment status updated to ${newStatus} for contribution ${contributionId}`);
+              return true;
+              
             } catch (err) {
-              console.error('Error updating payment status:', err);
-              throw err;
+              console.error('Error updating payment status:', {
+                error: err,
+                message: err.message,
+                contributionId,
+                newStatus,
+                firebaseConnected: !!window.firebaseDB
+              });
+              throw new Error(`Failed to update payment status: ${err.message}`);
             }
           }
 
@@ -461,11 +486,15 @@
                                           alert('Error: Contribution ID missing. Cannot confirm payment.');
                                           return;
                                         }
+                                        
+                                        console.log('Confirming payment for:', { name: contrib.name, id: contrib.id });
                                         await updatePaymentStatus(contrib.id, 'confirmed');
-                                        console.log('Payment confirmed for', contrib.name);
+                                        console.log('Payment confirmed successfully for', contrib.name);
+                                        alert(`Payment confirmed for ${contrib.name}!`);
+                                        
                                       } catch (error) {
                                         console.error('Error confirming payment:', error);
-                                        alert('Error confirming payment: ' + error.message);
+                                        alert(`Error confirming payment for ${contrib.name}: ${error.message}`);
                                       }
                                     }
                                   },
@@ -695,10 +724,14 @@
                                       alert('Error: Contribution ID missing. Cannot confirm payment.');
                                       return;
                                     }
+                                    
+                                    console.log('Admin confirming payment for:', { name: contrib.name, id: contrib.id });
                                     await updatePaymentStatus(contrib.id, 'confirmed');
+                                    console.log('Admin payment confirmation successful for', contrib.name);
+                                    
                                   } catch (error) {
-                                    console.error('Error confirming payment:', error);
-                                    alert('Error confirming payment: ' + error.message);
+                                    console.error('Admin error confirming payment:', error);
+                                    alert(`Error confirming payment for ${contrib.name}: ${error.message}`);
                                   }
                                 }
                               },
@@ -708,10 +741,18 @@
                               onClick: async () => {
                                 if (confirm(`Mark ${contrib.name}'s payment as pending?`)) {
                                   try {
+                                    if (!contrib.id) {
+                                      alert('Error: Contribution ID missing. Cannot update status.');
+                                      return;
+                                    }
+                                    
+                                    console.log('Admin marking payment as pending for:', { name: contrib.name, id: contrib.id });
                                     await updatePaymentStatus(contrib.id, 'pending_payment');
+                                    console.log('Admin payment status update successful for', contrib.name);
+                                    
                                   } catch (error) {
-                                    console.error('Error updating payment status:', error);
-                                    alert('Error updating payment status: ' + error.message);
+                                    console.error('Admin error updating payment status:', error);
+                                    alert(`Error updating payment status for ${contrib.name}: ${error.message}`);
                                   }
                                 }
                               },
@@ -725,12 +766,15 @@
                                       alert('Error: Contribution ID missing. Cannot delete.');
                                       return;
                                     }
+                                    
+                                    console.log('Admin deleting contribution for:', { name: contrib.name, id: contrib.id });
                                     const contributionRef = window.firebaseDB.ref(`contributions/${contrib.id}`);
                                     await contributionRef.remove();
-                                    console.log('Contribution deleted:', contrib.name);
+                                    console.log('Admin contribution deletion successful for', contrib.name);
+                                    
                                   } catch (error) {
-                                    console.error('Error deleting contribution:', error);
-                                    alert('Error deleting contribution: ' + error.message);
+                                    console.error('Admin error deleting contribution:', error);
+                                    alert(`Error deleting contribution for ${contrib.name}: ${error.message}`);
                                   }
                                 }
                               },
