@@ -319,7 +319,7 @@
                 // PayPal flow
                 const paypalMeURL = `https://paypal.me/rossgroom/${actualAmount.toFixed(2)}?country.x=GB&locale.x=en_GB`;
                 
-                const paymentMessage = `You'll now be redirected to PayPal to complete your £${actualAmount.toFixed(2)} contribution for "${selectedItem.item}".\n\nAfter payment, your contribution will appear on the registry.\n\nReady to proceed?`;
+                const paymentMessage = `You'll now be redirected to PayPal to complete your £${actualAmount.toFixed(2)} contribution for "${selectedItem.item}".\n\nYour contribution will show as confirmed once we have received it.\n\nReady to proceed?`;
                 
                 if (confirm(paymentMessage)) {
                   window.open(paypalMeURL, '_blank', 'noopener,noreferrer');
@@ -341,9 +341,9 @@
                   `Sort Code: 04-00-03\n` +
                   `Account Number: 81193421\n` +
                   `Amount: £${actualAmount.toFixed(2)}\n\n` +
-                  `Reference: ${selectedItem.item.substring(0, 10)}-${cleanName.substring(0, 5)}\n\n` +
+                  `Reference: ${selectedItem.id}-${cleanName.substring(0, 8)}\n\n` +
                   `Please use the reference above to help us identify your payment.\n\n` +
-                  `Your contribution will appear on the registry once we confirm the transfer.`;
+                  `Your contribution will show as confirmed once we have received it.`;
 
                 alert(bankDetails);
                 
