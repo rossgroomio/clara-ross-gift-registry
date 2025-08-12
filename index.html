@@ -255,30 +255,56 @@
           });
 
           async function handleContribution() {
-            if (!guestName || !contributionAmount || !selectedItem) return;          
+            console.log('🚀 === HANDLE CONTRIBUTION START ===');
+            
+            if (!guestName || !contributionAmount || !selectedItem) {
+              console.log('❌ Early return: missing data', { 
+                guestName: !!guestName, 
+                contributionAmount: !!contributionAmount, 
+                selectedItem: !!selectedItem 
+              });
+              return;
+            }
+
+            console.log('✅ Initial validation passed');
 
             const cleanName = guestName.trim();
             const amount = parseFloat(contributionAmount);
             
+            console.log('📝 Parsed values:', { cleanName, amount, originalAmount: contributionAmount });
+            
             // Basic validation
             if (cleanName.length < 2 || cleanName.length > 50) {
+              console.log('❌ Name validation failed:', cleanName.length);
               setError('Name must be 2-50 characters');
               return;
             }
             
             if (amount < 0.01 || amount > 1000) {
+              console.log('❌ Amount validation failed:', amount);
               setError('Amount must be between £0.01 and £1000');
               return;
-            }          
+            }
+
+            console.log('✅ Basic validation passed');
 
             const remaining = getRemainingAmount(selectedItem);
             
             if (remaining <= 0) {
+              console.log('❌ Item fully funded, remaining:', remaining);
               setError('This item has already been fully funded! Please refresh the page.');
               return;
             }
             
             const actualAmount = Math.min(amount, remaining);
+            
+            console.log('💰 Amount calculations:', { 
+              requested: amount, 
+              remaining, 
+              actualAmount,
+              selectedItemId: selectedItem.id,
+              selectedItemName: selectedItem.item
+            });
             
             // Warn user if their contribution will be reduced
             if (actualAmount < amount) {
@@ -286,9 +312,13 @@
               const confirmMessage = `This item only needs £${remaining.toFixed(2)} more to be fully funded.\n\nYour contribution will be reduced from £${amount.toFixed(2)} to £${actualAmount.toFixed(2)}.\n\nProceed with £${actualAmount.toFixed(2)}?`;
               
               if (!confirm(confirmMessage)) {
+                console.log('❌ User cancelled amount reduction');
                 return;
               }
+              console.log('✅ User accepted amount reduction');
             }
+
+            console.log('💳 About to show payment method dialog');
 
             // Payment method selection
             const paymentMethod = confirm(
@@ -297,8 +327,17 @@
               `Cancel = Bank Transfer (shows account details)`
             );
 
+            console.log('💳 Payment method selected:', paymentMethod ? 'PayPal' : 'Bank Transfer');
+
             setSaving(true);
-            setError(null);          
+            setError(null);
+
+            console.log('🔄 About to enter try block');
+            console.log('🔥 Firebase status:', {
+              firebaseDB: !!window.firebaseDB,
+              firebaseType: typeof window.firebaseDB,
+              firebaseKeys: window.firebaseDB ? Object.keys(window.firebaseDB) : 'none'
+            });
 
             try {
               // Record the contribution intent in Firebase
@@ -310,30 +349,66 @@
                 status: 'pending_payment',
                 paymentMethod: paymentMethod ? 'paypal' : 'bank_transfer',
                 timestamp: new Date().toISOString()
-              };          
+              };
 
+              console.log('📦 === CONTRIBUTION DEBUG ===');
+              console.log('📦 Contribution data being sent:', contributionIntent);
+              console.log('📦 Data types:', {
+                itemId: typeof contributionIntent.itemId,
+                itemName: typeof contributionIntent.itemName,
+                name: typeof contributionIntent.name,
+                amount: typeof contributionIntent.amount,
+                status: typeof contributionIntent.status,
+                paymentMethod: typeof contributionIntent.paymentMethod,
+                timestamp: typeof contributionIntent.timestamp
+              });
+              console.log('📦 Data values:', {
+                itemId: contributionIntent.itemId,
+                itemName: contributionIntent.itemName.substring(0, 20) + '...',
+                name: contributionIntent.name,
+                amount: contributionIntent.amount,
+                status: contributionIntent.status,
+                paymentMethod: contributionIntent.paymentMethod,
+                timestamp: contributionIntent.timestamp
+              });
+              console.log('📦 Firebase connected:', !!window.firebaseDB);
+              console.log('📦 ========================');
+
+              console.log('🔗 Getting Firebase contributions reference...');
               const contributionsRef = window.firebaseDB.ref('contributions');
+              console.log('🔗 Firebase ref created:', !!contributionsRef);
+              
+              console.log('💾 About to call contributionsRef.push()...');
               const newContribRef = await contributionsRef.push(contributionIntent);
+              console.log('✅ Firebase push successful! New ref:', !!newContribRef);
 
               if (paymentMethod) {
+                console.log('💳 Processing PayPal flow...');
                 // PayPal flow
                 const paypalMeURL = `https://paypal.me/rossgroom/${actualAmount.toFixed(2)}?country.x=GB&locale.x=en_GB`;
+                console.log('💳 PayPal URL generated:', paypalMeURL);
                 
                 const paymentMessage = `You'll now be redirected to PayPal to complete your £${actualAmount.toFixed(2)} contribution for "${selectedItem.item}".\n\nYour contribution will show as confirmed once we have received it.\n\nReady to proceed?`;
                 
                 if (confirm(paymentMessage)) {
+                  console.log('💳 Opening PayPal window...');
                   window.open(paypalMeURL, '_blank', 'noopener,noreferrer');
                   
+                  console.log('💳 Closing modal and resetting form...');
                   setShowContributionModal(false);
                   setGuestName('');
                   setContributionAmount('');
                   setSelectedItem(null);
                   
                   alert('Thank you! Please complete your payment in the PayPal window that just opened. Your contribution will appear here once payment is confirmed.');
+                  console.log('✅ PayPal flow completed successfully');
                 } else {
+                  console.log('❌ User cancelled PayPal payment, removing contribution...');
                   await newContribRef.remove();
+                  console.log('✅ Contribution removed');
                 }
               } else {
+                console.log('🏦 Processing Bank Transfer flow...');
                 // Bank transfer flow
                 const bankDetails = 
                   `Bank Transfer Details:\n\n` +
@@ -341,7 +416,7 @@
                   `Sort Code: 04-00-03\n` +
                   `Account Number: 81193421\n` +
                   `Amount: £${actualAmount.toFixed(2)}\n\n` +
-                  `Reference: ${selectedItem.id}-${cleanName.substring(0, 8)}\n\n` +
+                  `Reference: ${selectedItem.id}-${cleanName}\n\n` +
                   `Please use the reference above to help us identify your payment.\n\n` +
                   `Your contribution will show as confirmed once we have received it.`;
 
@@ -354,25 +429,40 @@
                     `Sort Code: 04-00-03\n` +
                     `Account Number: 81193421\n` +
                     `Amount: £${actualAmount.toFixed(2)}\n` +
-                    `Reference: ${selectedItem.item.substring(0, 10)}-${cleanName.substring(0, 5)}`;
+                    `Reference: ${selectedItem.id}-${cleanName}`;
                   
                   await navigator.clipboard.writeText(clipboardText);
+                  console.log('📋 Bank details copied to clipboard');
                   alert('Bank details copied to clipboard!');
                 } catch (e) {
-                  console.log('Clipboard not available');
+                  console.log('📋 Clipboard not available:', e.message);
                 }
 
+                console.log('🏦 Closing modal and resetting form...');
                 setShowContributionModal(false);
                 setGuestName('');
                 setContributionAmount('');
                 setSelectedItem(null);
+                console.log('✅ Bank transfer flow completed successfully');
               }
               
             } catch (err) {
+              console.error('💥 === CONTRIBUTION ERROR ===');
+              console.error('💥 Error details:', {
+                name: err.name,
+                message: err.message,
+                code: err.code,
+                stack: err.stack?.substring(0, 500)
+              });
+              console.error('💥 Full error object:', err);
+              console.error('💥 ========================');
+              
               setError('Failed to process contribution. Please try again.');
               console.error('Contribution error:', err);
             } finally {
+              console.log('🔄 Setting saving to false...');
               setSaving(false);
+              console.log('🏁 === HANDLE CONTRIBUTION END ===');
             }
           }
 
