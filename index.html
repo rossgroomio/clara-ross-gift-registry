@@ -234,9 +234,21 @@
               .reduce((sum, contrib) => sum + contrib.amount, 0);
           }
 
+          function getTotalPledged(item) {
+            // Include ALL contributions regardless of payment status
+            return item.contributions.reduce((sum, contrib) => sum + contrib.amount, 0);
+          }
+
           function getRemainingAmount(item) {
             const contributed = getTotalContributed(item);
             const remaining = item.price - contributed;
+            // Handle floating point precision issues
+            return Math.max(0, Math.round(remaining * 100) / 100);
+          }
+
+          function getRemainingToPledge(item) {
+            const pledged = getTotalPledged(item);
+            const remaining = item.price - pledged;
             // Handle floating point precision issues
             return Math.max(0, Math.round(remaining * 100) / 100);
           }
@@ -245,12 +257,15 @@
             return Math.min(100, (getTotalContributed(item) / item.price) * 100);
           }
 
+          function isFullyPledged(item) {
+            return getRemainingToPledge(item) === 0;
+          }
+
           const filteredItems = items.filter(item => {
-            const totalContributed = getTotalContributed(item);
-            const isFullyFunded = totalContributed >= item.price || Math.round((item.price - totalContributed) * 100) / 100 <= 0;
+            const fullyPledged = isFullyPledged(item);
               
-            if (filter === 'available') return !isFullyFunded;
-            if (filter === 'purchased') return isFullyFunded;
+            if (filter === 'available') return !fullyPledged;
+            if (filter === 'purchased') return fullyPledged;
             return true;
           });
 
@@ -288,11 +303,11 @@
 
             console.log('✅ Basic validation passed');
 
-            const remaining = getRemainingAmount(selectedItem);
+            const remaining = getRemainingToPledge(selectedItem);
             
             if (remaining <= 0) {
-              console.log('❌ Item fully funded, remaining:', remaining);
-              setError('This item has already been fully funded! Please refresh the page.');
+              console.log('❌ Item fully pledged, remaining:', remaining);
+              setError('This item has already been fully pledged! Please refresh the page.');
               return;
             }
             
@@ -543,7 +558,7 @@
                       ? 'bg-rose-500 text-white' 
                       : 'bg-white text-gray-600 hover:bg-rose-100'
                   }`
-                }, `Available (${items.filter(item => !item.purchased && getRemainingAmount(item) > 0).length})`),
+                }, `Available (${items.filter(item => !isFullyPledged(item)).length})`),
                 React.createElement('button', {
                   onClick: () => setFilter('purchased'),
                   className: `px-6 py-2 rounded-full font-medium transition-colors ${
@@ -551,7 +566,7 @@
                       ? 'bg-rose-500 text-white' 
                       : 'bg-white text-gray-600 hover:bg-rose-100'
                   }`
-                }, `Fulfilled (${items.filter(item => item.purchased || getRemainingAmount(item) === 0).length})`)
+                }, `Fulfilled (${items.filter(item => isFullyPledged(item)).length})`)
               ),
 
               // Gift Items Grid
@@ -662,7 +677,7 @@
                   React.createElement('h3', { className: "text-xl font-semibold mb-4" }, `Contribute to: ${selectedItem.item}`),
                   
                   React.createElement('div', { className: "mb-4" },
-                    React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, `Remaining amount needed: £${getRemainingAmount(selectedItem).toFixed(2)}`),
+                    React.createElement('p', { className: "text-sm text-gray-600 mb-2" }, `Remaining amount needed: £${getRemainingToPledge(selectedItem).toFixed(2)}`),
                     React.createElement('p', { className: "text-xs text-gray-500" }, "Payment options: PayPal or Bank Transfer")
                   ),
 
@@ -691,7 +706,7 @@
                       className: "w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-rose-500",
                       placeholder: "0.00",
                       min: "1",
-                      max: getRemainingAmount(selectedItem),
+                      max: getRemainingToPledge(selectedItem),
                       step: "0.01",
                       disabled: saving
                     })
